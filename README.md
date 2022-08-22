@@ -17,7 +17,7 @@ mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
 3.1版本修复了一些已知问题，提升稳定性，减少了日志的输出
 
-3.3版本，修复偶尔无法解锁的问题
+3.3版本，修复偶尔无法解锁的问题，优化了解锁速度
 
 3.3版本下载地址：
 https://wwt.lanzouy.com/irOik0a0rlkj
