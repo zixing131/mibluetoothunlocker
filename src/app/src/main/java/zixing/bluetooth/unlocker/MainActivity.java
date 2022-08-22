@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity {
 
                      */
 
-
                     String text = editText.getText().toString();
                     int xinhao =  Integer.parseInt(text);
                     if(xinhao>=-128&&xinhao<=0)

@@ -105,7 +105,7 @@ public class MyXp implements IXposedHookLoadPackage {
 
                     Field   mUnlockListenerField = MiuiSecurityBluetoothDeviceInfoFragment.getDeclaredField ("mUnlockListener");
                     mUnlockListenerField.setAccessible(true);
-                    Object   mUnlockListener  = mUnlockListenerField.get(param.thisObject);
+                    mUnlockListener  = mUnlockListenerField.get(param.thisObject);
 
                     Field   mLockPatternUtilsField = MiuiSecurityBluetoothDeviceInfoFragment.getDeclaredField ("mLockPatternUtils");
                     mLockPatternUtilsField.setAccessible(true);
@@ -123,14 +123,8 @@ public class MyXp implements IXposedHookLoadPackage {
                             {
                                 if("0".equals(param.args[0].toString()))
                                 {
-                                    if(BluetoothHelper.CanUnlockByBluetoothOld(context, XposedHelpers.callMethod(mLockPatternUtils,"getBluetoothAddressToUnlock").toString() ,loadPackageParam.classLoader,1) == true)
-                                    {
-                                        param.args[0] = (byte)(2);
-                                    }
-                                    else {
-                                        param.args[0] = (byte)(1);
-                                        myLog("-------------- 不符合解锁条件 ------------");
-                                    }
+                                    param.args[0] = (byte)(1);
+                                    BluetoothHelper.CanUnlockByBluetoothOldDirect(context, XposedHelpers.callMethod(mLockPatternUtils,"getBluetoothAddressToUnlock").toString() ,loadPackageParam.classLoader,1);
                                 }
                             }
                         }
@@ -229,13 +223,7 @@ public class MyXp implements IXposedHookLoadPackage {
             public void run() {
                 if(context!=null && mLockPatternUtils!=null && classLoader!=null)
                 {
-                    if(BluetoothHelper.CanUnlockByBluetoothOld( context,XposedHelpers.callMethod(mLockPatternUtils,"getBluetoothAddressToUnlock").toString() ,classLoader,2) == true)
-                    {
-                        UnlockPhone();
-                    }
-                    else {
-                        myLog("-------------- 不符合解锁条件 ------------");
-                    }
+                    BluetoothHelper.CanUnlockByBluetoothOldDirect( context,XposedHelpers.callMethod(mLockPatternUtils,"getBluetoothAddressToUnlock").toString() ,classLoader,2)                             ;
                 }  else{
                     myLog("---------------NULL context--------------"+context+mLockPatternUtils+classLoader);
                 }
@@ -248,6 +236,7 @@ public class MyXp implements IXposedHookLoadPackage {
     static ClassLoader classLoader = null;
     static  Object   mLockPatternUtils=null;
     static Context context = null;
+    static Object mUnlockListener = null;
     public static Object mBleListener = null;
     public static void UnlockPhone(){
          try {
@@ -267,4 +256,24 @@ public class MyXp implements IXposedHookLoadPackage {
              myLog(e.toString());
         }
     }
+
+    public static void SetBluetoothStatus(byte b){
+        try {
+            if(mUnlockListener!=null && context!=null)
+            {
+                new Handler(context.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        XposedHelpers.callMethod(mUnlockListener,"onUnlocked",b);
+                    }
+                });
+            }
+            else{
+                myLog("---------------NULL unlockMethod--------------");
+            }
+        } catch (Exception e) {
+            myLog(e.toString());
+        }
+    }
+
 }
