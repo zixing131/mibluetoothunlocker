@@ -1,6 +1,8 @@
 # mibluetoothunlocker
 mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
+代码写的比较烂，各位大佬请轻喷
+
 本软件是xposed插件，可以使非小米/红米手环 在小米手机上使用蓝牙解锁功能
 
 本软件hook了系统设置和系统界面，可能会降低系统安全性，请您酌情使用
