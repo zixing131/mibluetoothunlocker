@@ -8,6 +8,7 @@
     android:layout_gravity="center"
     android:gravity="center"
     tools:context=".MainActivity">
+
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -40,7 +41,8 @@
                 />
             <EditText
                 android:id="@+id/editText"
-                android:layout_width="wrap_content"
+                android:layout_width="200px"
+                android:gravity="center"
                 android:layout_height="wrap_content"
                 android:text="-50" >
             </EditText>
@@ -56,6 +58,16 @@
             >
 
         </Button>
+
+        <Button
+            android:layout_marginTop="5pt"
+            android:id="@+id/buttonpri"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="隐私协议"
+            >
+        </Button>
+
     </LinearLayout>
 
 
