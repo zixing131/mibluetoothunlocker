@@ -19,10 +19,14 @@ mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
 3.3版本，修复偶尔无法解锁的问题，优化了解锁速度
 
-3.3版本下载地址：
-https://wwt.lanzouy.com/irOik0a0rlkj
+3.4版本，更新隐私协议
+
+3.4版本下载地址：
+https://wwt.lanzouy.com/i3S4f0a4q8rg
 密码:52pj
 
-
-![65820c258a0454a081a89b7ea22e8461_181516udo6evcrnnb9f6yv](https://user-images.githubusercontent.com/18580281/185857153-0929028b-57c5-44e3-803e-65f3e0431d8e.jpg)
-![de8aa636f5481d07b214029bc6a544d8_181531z9y2k95f7277u5rr](https://user-images.githubusercontent.com/18580281/185857188-4a0d63d9-d098-4050-8682-406bc18d0fd5.jpg)
+![1](https://user-images.githubusercontent.com/18580281/186316181-828c958c-0982-47ef-9853-2f838e0a061f.jpg)
+![2](https://user-images.githubusercontent.com/18580281/186316209-997fafc5-6dc7-4533-acf3-44cad3c4fb04.jpg)
+![3](https://user-images.githubusercontent.com/18580281/186316241-bff40689-f424-4abc-a386-e3c32dec7c09.jpg)
+![4](https://user-images.githubusercontent.com/18580281/186316271-d75cff3f-1814-490b-b622-84191a4a9ec3.jpg)
+![5](https://user-images.githubusercontent.com/18580281/186316304-ba3b9873-5a93-4c8b-98d0-e9a6beca58db.jpg)
