@@ -1,3 +1,6 @@
 <resources>
     <string name="app_name">mibluetoothunlocker</string>
+    <string name="action_settings">设置</string>
+    <string name="app_about">\t\t\t\t\t\t\t\t\t手环解锁工具使用说明\n启用后勾选设置[com.android.setting]\n和系统界面[com.android.systemui]\n然后重启手机即可\n注意：使用本插件可能会降低系统安全性！\n信号阈值为负数，越小越灵敏(越容易被解锁)\n注意：更新软件后，可能要重启设备才会生效</string>
+    <string name="github_url">https://github.com/zixing131/mibluetoothunlocker</string>
 </resources>

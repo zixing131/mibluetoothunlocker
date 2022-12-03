@@ -1,18 +1,19 @@
 package zixing.bluetooth.unlocker.Xp;
 
-import de.robv.android.xposed.*;
-import de.robv.android.xposed.callbacks.XC_LoadPackage;
-import zixing.bluetooth.unlocker.BluetoothHelper;
-import zixing.bluetooth.unlocker.XSPUtils;
-
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-
 import android.content.Context;
-import android.content.Intent;
 import android.os.Handler;
 import android.util.Log;
+
+import java.lang.reflect.Field;
+
+import de.robv.android.xposed.IXposedHookLoadPackage;
+import de.robv.android.xposed.XC_MethodHook;
+import de.robv.android.xposed.XC_MethodReplacement;
+import de.robv.android.xposed.XposedBridge;
+import de.robv.android.xposed.XposedHelpers;
+import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import zixing.bluetooth.unlocker.utils.BluetoothHelper;
+import zixing.bluetooth.unlocker.utils.XSPUtils;
 
 
 public class MyXp implements IXposedHookLoadPackage {

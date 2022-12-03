@@ -3,7 +3,10 @@ pluginManagement {
         gradlePluginPortal()
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
+    }
+    plugins {
+        id 'com.android.application' version '7.2.2'
+        id 'com.android.library' version '7.2.2'
     }
 }
 dependencyResolutionManagement {
@@ -11,8 +14,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        maven { url 'https://jitpack.io' }
     }
 }
-rootProject.name = "mibluetoothunlocker"
+rootProject.name = "bluetooth"
 include ':app'

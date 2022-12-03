@@ -1,24 +1,19 @@
-package zixing.bluetooth.unlocker;
-
-import static android.content.Context.MODE_PRIVATE;
+package zixing.bluetooth.unlocker.utils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.provider.SyncStateContract;
 import android.util.Log;
-import android.util.Xml;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 
 import de.robv.android.xposed.XposedBridge;
+import zixing.bluetooth.unlocker.activity.MainActivity;
 
 public class XSPUtils {
 
@@ -39,7 +34,6 @@ public class XSPUtils {
 
     public static Context catchContext;
     public static Object lockobj = new Object();
-
     public static SharedPreferences xsp;
 
     /**
@@ -67,6 +61,7 @@ public class XSPUtils {
     }
 
     //type1是setting，2是系统界面，0是软件本体
+
 
     public static String getString(String key,String def,int type){
 

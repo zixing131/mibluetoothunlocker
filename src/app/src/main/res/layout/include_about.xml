@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardElevation="8dip"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="10dp"
+    app:cardPreventCornerOverlap="true"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:id="@+id/tvAbout"
+        android:layout_margin="10dp"
+        android:textSize="15sp"
+        android:textColor="@color/colorSecondText"
+        android:text="@string/app_about"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+</androidx.cardview.widget.CardView>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="LoadingStyle">
+        <item name="android:maxWidth">25.0dip</item>
+        <item name="android:maxHeight">25.0dip</item>
+        <item name="android:indeterminateDrawable">@drawable/progress_large</item>
+        <item name="android:indeterminateDuration">1000</item>
+        <item name="android:minWidth">20.0dip</item>
+        <item name="android:minHeight">20.0dip</item>
+    </style>
+
+    <style name="hintAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textColor">@color/purple_500</item>
+    </style>
+    <style name="TextInputLayoutStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+        <item name="boxStrokeColor">@color/purple_500</item>
+        <item name="hintTextAppearance">@style/hintAppearance</item>
+    </style>
+
+    <style name="CustomShapeOVerlay" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSizeTopLeft">0dp</item>
+        <item name="cornerSizeTopRight">30dp</item>
+        <item name="cornerSizeBottomRight">0dp</item>
+        <item name="cornerSizeBottomLeft">30dp</item>
+    </style>
+</resources>

@@ -1,14 +1,12 @@
-package zixing.bluetooth.unlocker;
+package zixing.bluetooth.unlocker.utils;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothGatt;
-import android.content.Context;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.util.Log;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.content.Context;
+import android.util.Log;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -16,14 +14,7 @@ import java.util.ArrayList;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import zixing.bluetooth.unlocker.Xp.MyXp;
-
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothProfile;
+import zixing.bluetooth.unlocker.activity.MainActivity;
 
 public class BluetoothHelper {
 

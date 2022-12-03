@@ -1,24 +1,15 @@
 plugins {
     id 'com.android.application'
 }
-
 android {
-    signingConfigs {
-        debug {
-
-        }
-        release {
-
-        }
-    }
-    compileSdk 32
+    compileSdk 31
 
     defaultConfig {
         applicationId "zixing.bluetooth.unlocker"
-        minSdk 26
-        targetSdk 32
-        versionCode 34
-        versionName '3.4'
+        minSdk 21
+        targetSdk 31
+        versionCode 35
+        versionName "3.5"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -27,26 +18,25 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-        debug {
-            signingConfig signingConfigs.debug
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
     }
-    buildToolsVersion '30.0.3'
 }
 
 dependencies {
-
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    compileOnly files('libs\\api-82.jar')
-    compileOnly files('libs\\api-82-sources.jar')
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'com.jakewharton:butterknife:10.0.0'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:10.0.0'
+    implementation 'com.getbase:floatingactionbutton:1.10.1'
+    compileOnly files('libs/api-82.jar')
+    compileOnly files('libs/api-82-sources.jar')
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'

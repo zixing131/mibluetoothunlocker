@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    app:cardBackgroundColor="@color/white"
+    app:cardCornerRadius="10dp"
+    app:cardElevation="0dp"
+    app:cardPreventCornerOverlap="true"
+    app:contentPadding="@dimen/tr_dimen_20"
+    android:id="@+id/itemCartView"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:layout_marginLeft="@dimen/tr_dimen_20"
+    android:layout_marginRight="@dimen/tr_dimen_20"
+    android:layout_marginTop="@dimen/tr_dimen_20"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <RelativeLayout
+        android:minHeight="50dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/imageSignal"
+            android:layout_width="30dip"
+            android:layout_height="30dip"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/tr_dimen_20"
+            android:src="@mipmap/ic_rssi1" />
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerVertical="true"
+            android:layout_toStartOf="@id/llt"
+            android:layout_toEndOf="@id/imageSignal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtAddress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="Unknown"
+                android:textColor="@android:color/black"
+                android:textSize="17sp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal">
+
+
+                <TextView
+                    android:id="@+id/txtMac"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:maxLines="1"
+                    android:text="12:b4:8E:66:99:AA"
+                    android:textColor="@color/text_second_color_primary"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/txtDesc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginTop="5dp"
+                    android:background="@drawable/tv_desc"
+                    android:maxLines="1"
+                    android:padding="2dp"
+                    android:text="已匹配过"
+                    android:textColor="@color/white"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/llt"
+            android:layout_centerVertical="true"
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true">
+
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_marginRight="@dimen/tr_dimen_20"
+                    android:id="@+id/imageSignalOne"
+                    android:layout_width="20dip"
+                    android:layout_height="20dip"
+                    android:src="@mipmap/ic_signal_one"/>
+
+
+                <TextView
+                    android:textColor="@color/text_second_color_primary"
+                    android:textSize="13sp"
+                    android:text="-80dB"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/txtRssi"
+                    android:maxLines="1"/>
+
+
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:layout_marginRight="@dimen/tr_dimen_20"
+                    android:id="@+id/imageLink"
+                    android:layout_width="20dip"
+                    android:layout_height="20dip"
+                    android:src="@mipmap/ic_link"/>
+
+
+                <TextView
+                    android:textColor="@color/text_second_color_primary"
+                    android:textSize="13sp"
+                    android:text="256ms"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/txtTime"
+                    android:maxLines="1"/>
+
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+    </RelativeLayout>
+
+
+
+</androidx.cardview.widget.CardView>

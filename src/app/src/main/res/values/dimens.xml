@@ -1,0 +1,4 @@
+<resources>
+    <dimen name="fab_margin">16dp</dimen>
+    <dimen name="tr_dimen_20">10dp</dimen>
+</resources>
