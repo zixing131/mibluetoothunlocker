@@ -19,6 +19,7 @@ import zixing.bluetooth.unlocker.adapter.base.BaseRecyclerViewAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.ArrUtils;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
+import zixing.bluetooth.unlocker.utils.XSPUtils;
 
 public class DeviceActivity extends BaseActivity implements BluetoothUtils.BluetoothInterface{
 
@@ -37,8 +38,10 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initView();
-
-
+        if(!BluetoothUtils.getInstance().isEnabled())
+        {
+            BluetoothUtils.getInstance().enable();
+        }
     }
 
     @Override
@@ -126,7 +129,11 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
                     builder.setPositiveButton("确定", (dialog, which) -> {
                         dialog.dismiss();
                         //这里保存数据
+                        XSPUtils.setString("mac",bean.getAddress());
                         self.finish();
+                        MainActivity.self.runOnUiThread(()->{
+                            MainActivity.self. readConfig();
+                        });
                     });
                     builder.setNegativeButton("取消", (dialog, which) -> {
                         dialog.dismiss();

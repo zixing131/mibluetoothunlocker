@@ -15,7 +15,7 @@ import zixing.bluetooth.unlocker.bean.DeviceBean;
 
 public class BluetoothUtils {
     final String TAG = getClass().getName();
-    Context context;
+    private Context context;
     private static BluetoothUtils bluetoothInstance;
     private BluetoothAdapter bluetoothAdapter ;
     private BluetoothInterface bluetoothInterface;
@@ -53,7 +53,7 @@ public class BluetoothUtils {
 
     }
 
-    BroadcastReceiver bluetoothBroadcast = new BroadcastReceiver(){
+    public BroadcastReceiver bluetoothBroadcast = new BroadcastReceiver(){
         @SuppressLint("MissingPermission")
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -137,7 +137,10 @@ public class BluetoothUtils {
     }
 
     public void onDestroy(){
-        context.unregisterReceiver(bluetoothBroadcast);
+       if(context!=null)
+       {
+           context.unregisterReceiver(bluetoothBroadcast);
+       }
     }
 
     public interface BluetoothInterface{

@@ -81,15 +81,29 @@ public class XSPUtils {
         else if(type==1)
         {
             try{
-            synchronized(lockobj) {
-                File file = new File("/sdcard/Android/data/com.android.settings/config.ini");
-                FileInputStream fis = new FileInputStream(file);
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-               String data=  br.readLine().trim();
-                br.close();
-                fis.close();
-               return data;
-            }
+                if("rssi".equals(key))
+                {
+                    synchronized(lockobj) {
+                        File file = new File("/sdcard/Android/data/com.android.settings/config.ini");
+                        FileInputStream fis = new FileInputStream(file);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                        String data=  br.readLine().trim();
+                        br.close();
+                        fis.close();
+                        return data;
+                    }
+                }
+                else if("mac".equals(key)) {
+                    synchronized (lockobj) {
+                        File file = new File("/sdcard/Android/data/com.android.settings/config_mac.ini");
+                        FileInputStream fis = new FileInputStream(file);
+                        BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                        String data = br.readLine().trim();
+                        br.close();
+                        fis.close();
+                        return data;
+                    }
+                }
             }catch (Exception ex)
             {
                 myLog("读取com.android.settings/config.ini失败"+ex);
@@ -99,21 +113,34 @@ public class XSPUtils {
         else if(type==2)
         {
             try{
+                if("rssi".equals(key))
+                {
                 synchronized(lockobj) {
                     File file = new File("/sdcard/Android/data/com.android.systemui/config.ini");
                     FileInputStream fis = new FileInputStream(file);
                     BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-                    String data=  br.readLine().trim();
+                    String data = br.readLine().trim();
                     br.close();
                     fis.close();
                     return data;
+                }
+                } else if("mac".equals(key)) {
+                    synchronized(lockobj) {
+                    File file = new File("/sdcard/Android/data/com.android.systemui/config_mac.ini");
+                    FileInputStream fis = new FileInputStream(file);
+                    BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                    String data = br.readLine().trim();
+                    br.close();
+                    fis.close();
+                    return data;
+                    }
                 }
             }catch (Exception ex)
             {
                 myLog("读取com.android.systemui/config.ini失败"+ex);
             }
         }
-        return "-50";
+        return "";
 
         /*
         synchronized(catchContext){
@@ -204,29 +231,55 @@ public class XSPUtils {
                 xsp.edit().putString(key,def).commit();
             }
 
+            if("rssi".equals(key))
+            {
+                synchronized(catchContext) {
 
-            synchronized(catchContext) {
+                    synchronized(catchContext) {
+                        File folder = new File("/sdcard/Android/data/com.android.settings/");
+                        if(folder.exists()==false)
+                        {
+                            execRootCmdSilent("mkdir /sdcard/Android/data/com.android.settings/");
+                        }
+                        execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.settings/config.ini");
+                    }
+                }
 
                 synchronized(catchContext) {
-                    File folder = new File("/sdcard/Android/data/com.android.settings/");
+                    File folder = new File("/sdcard/Android/data/com.android.systemui/");
                     if(folder.exists()==false)
                     {
-                        execRootCmdSilent("mkdir /sdcard/Android/data/com.android.settings/");
+                        execRootCmdSilent("mkdir /sdcard/Android/data/com.android.systemui/");
                     }
-                    execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.settings/config.ini");
-                }
-            }
+                    execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.systemui/config.ini");
 
-            synchronized(catchContext) {
-                File folder = new File("/sdcard/Android/data/com.android.systemui/");
-                if(folder.exists()==false)
-                {
-                    execRootCmdSilent("mkdir /sdcard/Android/data/com.android.systemui/");
                 }
-                execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.systemui/config.ini");
 
             }
+            else if("mac".equals(key))
+            {
+                synchronized(catchContext) {
 
+                    synchronized(catchContext) {
+                        File folder = new File("/sdcard/Android/data/com.android.settings/");
+                        if(folder.exists()==false)
+                        {
+                            execRootCmdSilent("mkdir /sdcard/Android/data/com.android.settings/");
+                        }
+                        execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.settings/config_mac.ini");
+                    }
+                }
+
+                synchronized(catchContext) {
+                    File folder = new File("/sdcard/Android/data/com.android.systemui/");
+                    if(folder.exists()==false)
+                    {
+                        execRootCmdSilent("mkdir /sdcard/Android/data/com.android.systemui/");
+                    }
+                    execRootCmdSilent("echo \""+def+"\" > /sdcard/Android/data/com.android.systemui/config_mac.ini");
+
+                }
+            }
             return true;
         }
        catch (Exception ex)

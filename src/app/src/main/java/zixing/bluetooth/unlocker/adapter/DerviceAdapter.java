@@ -60,7 +60,7 @@ public class DerviceAdapter extends BaseRecyclerViewAdapter<DeviceBean> {
         animate(viewHolder, position);
     }
 
-    private int getRssiIcon(int rssi){
+    public static int getRssiIcon(int rssi){
         if (rssi >= -50){
             return R.mipmap.ic_rssi5;
         }else if (rssi >= -62){
@@ -74,21 +74,21 @@ public class DerviceAdapter extends BaseRecyclerViewAdapter<DeviceBean> {
         }
     }
 
-    static class MyViewHolder extends RecyclerView.ViewHolder {
+    public static class MyViewHolder extends RecyclerView.ViewHolder {
         @BindView(R.id.txtAddress)
-        TextView txtAddress;
+        public TextView txtAddress;
         @BindView(R.id.txtMac )
-        TextView txtMac;
+        public TextView txtMac;
         @BindView(R.id.txtRssi)
-        TextView txtRssi;
+        public TextView txtRssi;
         @BindView(R.id.txtTime)
-        TextView txtTime;
+        public TextView txtTime;
         @BindView(R.id.txtDesc)
-        TextView txtDesc;
+        public TextView txtDesc;
         @BindView(R.id.imageSignal)
-        ImageView imageSignal;
+        public ImageView imageSignal;
 
-        MyViewHolder(View view) {
+        public MyViewHolder(View view) {
             super(view);
             ButterKnife.bind(this, view);
         }

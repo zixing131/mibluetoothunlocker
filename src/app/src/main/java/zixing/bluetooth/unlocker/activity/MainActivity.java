@@ -2,20 +2,28 @@ package zixing.bluetooth.unlocker.activity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
 
@@ -25,6 +33,11 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.OnClick;
 import zixing.bluetooth.unlocker.R;
+import zixing.bluetooth.unlocker.Xp.MyXp;
+import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
+import zixing.bluetooth.unlocker.adapter.DerviceAdapter$MyViewHolder_ViewBinding;
+import zixing.bluetooth.unlocker.bean.DeviceBean;
+import zixing.bluetooth.unlocker.utils.BluetoothUtils;
 import zixing.bluetooth.unlocker.utils.XSPUtils;
 
 /**
@@ -35,7 +48,7 @@ import zixing.bluetooth.unlocker.utils.XSPUtils;
  * E-mail:1311817771@qq.com
  */
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity  {
     @BindView(R.id.editText)
     TextInputEditText editText;
     @BindView(R.id.btnSave)
@@ -51,6 +64,7 @@ public class MainActivity extends BaseActivity {
 
         }
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.right_menu, menu);
@@ -76,9 +90,9 @@ public class MainActivity extends BaseActivity {
             //权限全部通过的处理
         }
     }
-    private void ShowHelp()
-    {
-        String helpstr="手环解锁工具\n启用后勾选设置[com.android.setting]和系统界面[com.android.systemui]\n然后重启手机即可，注意：使用本插件可能会降低系统安全性！\n信号阈值为负数，越小越灵敏(越容易被解锁)\n注意：更新软件后，可能要重启设备才会生效";
+
+    private void ShowHelp() {
+        String helpstr = "手环解锁工具\n启用后勾选设置[com.android.setting]和系统界面[com.android.systemui]\n然后重启手机即可，注意：使用本插件可能会降低系统安全性！\n信号阈值为负数，越小越灵敏(越容易被解锁)\n注意：更新软件后，可能要重启设备才会生效";
         AlertDialog.Builder builder = new AlertDialog.Builder(self);
         builder.setMessage(helpstr);
         builder.setCancelable(false);
@@ -92,30 +106,50 @@ public class MainActivity extends BaseActivity {
         builder.create().show();
     }
 
+
+
     @Override
     public int getLayoutId() {
         return R.layout.activity_main;
     }
-
+    DerviceAdapter.MyViewHolder Adapter=null;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initPermission();
         self = this;
         XSPUtils.initXSP(getApplicationContext());
+        View view = this.findViewById(R.id.itemdevicemain);
+        Adapter = new DerviceAdapter.MyViewHolder(view);
+        if(!BluetoothUtils.getInstance().isEnabled())
+        {
+            BluetoothUtils.getInstance().enable();
+        }
         initView();
     }
 
-    @OnClick({R.id.btnSave})
+    @OnClick({R.id.btnSave,R.id.fabmain})
     public void onClick(View view) {
+
         switch (view.getId()) {
             case R.id.btnSave:
                 saveConfig();
                 break;
+            case  R.id.fabmain:
+                long nowtime = System.currentTimeMillis();
+                if(nowtime - lstClickTime< 5000)
+                {
+                    Tt("请不要频繁点击刷新！");
+                    return;
+                }
+                lstClickTime=nowtime;
+                Tt("开始刷新...");
+                readConfig();
+                break;
         }
     }
-    private void ExitProgram()
-    {
+
+    private void ExitProgram() {
         self.finish();
     }
 
@@ -138,6 +172,9 @@ public class MainActivity extends BaseActivity {
             case R.id.private_menu:
                 PrivacyPolicy();
                 break;
+            case R.id.clear_device:
+                ClearDevice();
+                break;
             case R.id.exit_menu:
                 ExitProgram();
                 break;
@@ -147,6 +184,23 @@ public class MainActivity extends BaseActivity {
                 break;
         }
         return false;
+    }
+
+    private void ClearDevice()
+    {
+        String helpstr = "确认后将恢复软件绑定的解锁设备，请使用系统自带的蓝牙解锁设备绑定功能！";
+        AlertDialog.Builder builder = new AlertDialog.Builder(self);
+        builder.setMessage(helpstr);
+        builder.setCancelable(false);
+        builder.setTitle("是否确认");
+        builder.setPositiveButton("确认",(dialog, which) -> {
+            XSPUtils.setString("mac","");
+            dialog.dismiss();
+        });
+        builder.setNegativeButton("取消", (dialog, which) -> {
+            dialog.dismiss();
+        });
+        builder.create().show();
     }
 
     private void initView() {
@@ -178,15 +232,14 @@ public class MainActivity extends BaseActivity {
 
     private void saveConfig() {
         String text = editText.getText().toString();
-        if (text.isEmpty())return;
-        try{
+        if (text.isEmpty()) return;
+        try {
             int xinhao = Integer.parseInt(text);
             if (xinhao < -128 || xinhao > 0) {
                 Tt("请输入正确的数值(-128到0)");
                 return;
             }
-        } catch (Exception ex)
-        {
+        } catch (Exception ex) {
             Tt("请输入正确的数值(-128到0)");
             return;
         }
@@ -225,17 +278,108 @@ public class MainActivity extends BaseActivity {
         builder.create().show();
     }
 
+
     private void openActList() {
         Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
         startActivity(intent);
     }
 
-    private void readConfig() {
+    static BluetoothGatt bluetoothGattInstance = null;
+    String mac = "";
+
+    @SuppressLint("MissingPermission")
+    public void readConfig() {
         try {
             String text = XSPUtils.getString("rssi", "-50", 0);
+            XSPUtils.execRootCmdSilent("");
             editText.setText(text);
+
+            mac = XSPUtils.getString("mac", "", 0);
+            if (mac != null && !mac.isEmpty()) {
+
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    initPermission();
+                }
+                BluetoothAdapter mDefaultBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+                if (mDefaultBluetoothAdapter.isEnabled() == false) {
+                    BluetoothUtils.getInstance().enable();
+                }
+                BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
+                DeviceBean bean=new DeviceBean();
+                bean.setAddress(device.getAddress());
+                bean.setName(device.getName());
+                bean.setStatus(device.getBondState() == BluetoothDevice.BOND_BONDED);
+                DeviceBean data= bean;
+                if (data == null) return;
+                Adapter.txtAddress.setText(data.getName().isEmpty()?"Unknown":data.getName());
+                Adapter.txtMac.setText(data.getAddress().isEmpty()?"Unknown":data.getAddress());
+                Adapter.txtRssi.setText("");
+                Adapter.txtTime.setText("");
+                Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(-120));
+                Adapter.txtDesc.setVisibility(data.isStatus()?View.VISIBLE:View.GONE);
+
+
+                initbluetoothGattInstance(mac);
+
+                boolean rdRemoteRssi = bluetoothGattInstance.readRemoteRssi();
+                if(!rdRemoteRssi)
+                {
+                    myLog("第一次读取rssi失败，重试一次 ");
+                    bluetoothGattInstance.close();
+                    Thread.yield();
+                    Thread.sleep(100);
+                    Thread.yield();
+                    initbluetoothGattInstance(mac);
+                    Thread.yield();
+                    Thread.sleep(100);
+                    Thread.yield();
+                    rdRemoteRssi = bluetoothGattInstance.readRemoteRssi();
+                    if(!rdRemoteRssi)
+                    {
+                        Tt("读取绑定设备的信号强度失败！");
+                        myLog("二次读取rssi失败 ");
+                    }
+                }
+            }else{
+                readNoDevice();
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
+            readNoDevice();
         }
     }
+
+    @SuppressLint("MissingPermission")
+    private  void initbluetoothGattInstance(String mac)
+    {
+            BluetoothAdapter mDefaultBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+            BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
+            bluetoothGattInstance = device.connectGatt(this.getApplicationContext(), false, new BluetoothGattCallback() {
+                @SuppressLint("MissingPermission")
+                @Override
+                public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+                    myLog("信号强度："+rssi);
+                    super.onReadRemoteRssi(gatt, rssi, status);
+                    self.runOnUiThread(()->{
+                        Adapter.txtRssi.setText(rssi+"dB");
+                        Adapter.txtTime.setText(String.format("%.2f",  BluetoothUtils.getInstance().getDistance(rssi))+"m");
+                        Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(rssi));
+                    });
+                }
+            });
+    }
+
+    private long lstClickTime=0;
+
+    private void readNoDevice()
+    {
+        Adapter.txtAddress.setText("未读取到设备");
+        Adapter.txtMac.setText("Unknown");
+        Adapter.txtRssi.setText("");
+        Adapter.txtTime.setText("");
+        Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(0));
+        Adapter.txtDesc.setVisibility(View.GONE);
+    }
+
 }

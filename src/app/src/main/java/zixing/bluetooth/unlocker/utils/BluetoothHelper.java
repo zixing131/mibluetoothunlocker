@@ -95,6 +95,12 @@ public class BluetoothHelper {
         if (mDefaultBluetoothAdapter.isEnabled() == false) {
             return ;
         }
+        String maclocal = XSPUtils.getString("mac","",type);
+        if(maclocal!=null && !mac.isEmpty())
+        {
+            mac = maclocal;
+        }
+
         BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
         bluetoothGattInstance = device.connectGatt(context,false,new BluetoothGattCallback()
         {
