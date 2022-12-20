@@ -35,22 +35,37 @@ public class MyXp implements IXposedHookLoadPackage {
             final Class MiuiLockPatternUtilClass = XposedHelpers.findClass("android.security.MiuiLockPatternUtils", loadPackageParam.classLoader);
 
 
-            String macrep = XSPUtils.getString("mac","",1);
+            final String[] macrep = {XSPUtils.getString("mac", "", 1)};
 
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Context context1 = (Context) param.args[0];
 
-                    if(macrep!=null && !macrep.isEmpty())
+                    if(macrep[0] !=null && !macrep[0].isEmpty())
                     {
-                        Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
-                        c0.setAccessible(true);
-                        Object utilclass= c0.newInstance(new Object[]{ context1});
-                        XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",true);
-                        XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock",macrep);
-                        XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","mibluetoothunlocker");
-                        XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","mibluetoothunlocker");
+                        if(XSPUtils.BASE_MODE.equals(macrep[0]))
+                        {
+                            Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
+                            c0.setAccessible(true);
+                            Object utilclass= c0.newInstance(new Object[]{ context1});
+                            XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",false);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock","");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","");
+
+                            XSPUtils.clearSettingString();
+                            macrep[0] ="";
+
+                        }else{
+                            Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
+                            c0.setAccessible(true);
+                            Object utilclass= c0.newInstance(new Object[]{ context1});
+                            XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",true);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock", macrep[0]);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","mibluetoothunlocker");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","mibluetoothunlocker");
+                        }
                     }
                 }
             });
@@ -59,9 +74,14 @@ public class MyXp implements IXposedHookLoadPackage {
             XposedHelpers.findAndHookMethod(MiuiLockPatternUtilClass,"getBluetoothAddressToUnlock",new XC_MethodHook() {
                         @Override
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
-                             if(macrep!=null && !macrep.isEmpty())
+                             if(macrep[0] !=null && !macrep[0].isEmpty())
                              {
-                                 param.setResult(macrep);
+                                 if(XSPUtils.BASE_MODE.equals(macrep[0]))
+                                 {
+                                     param.setResult(null);
+                                 }else{
+                                 param.setResult(macrep[0]);
+                             }
                              }
                         }
                     });
@@ -192,17 +212,29 @@ public class MyXp implements IXposedHookLoadPackage {
 
                     if(macrep!=null && !macrep.isEmpty())
                     {
-                        Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
-                        c0.setAccessible(true);
-                        Object utilclass= c0.newInstance(new Object[]{ context1});
-                        XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",true);
-                        XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock",macrep);
-                        XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","mibluetoothunlocker");
-                        XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","mibluetoothunlocker");
+                        if(XSPUtils.BASE_MODE.equals(macrep))
+                        {
+                            Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
+                            c0.setAccessible(true);
+                            Object utilclass= c0.newInstance(new Object[]{ context1});
+                            XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",false);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock","");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","");
+                            XSPUtils.clearSystemUIString();
+
+                        }else{
+                            Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
+                            c0.setAccessible(true);
+                            Object utilclass= c0.newInstance(new Object[]{ context1});
+                            XposedHelpers.callMethod(utilclass,"setBluetoothUnlockEnabled",true);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock",macrep);
+                            XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","mibluetoothunlocker");
+                            XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","mibluetoothunlocker");
+                        }
                     }
                 }
             });
-
 
             final Class BluetoothControllerImplClass =  XposedHelpers.findClass("com.android.systemui.statusbar.policy.BluetoothControllerImpl",  loadPackageParam.classLoader);
 

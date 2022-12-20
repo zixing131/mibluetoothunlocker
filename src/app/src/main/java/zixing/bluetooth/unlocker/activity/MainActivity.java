@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.InputFilter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -27,6 +29,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -175,8 +179,14 @@ public class MainActivity extends BaseActivity  {
             case R.id.clear_device:
                 ClearDevice();
                 break;
+            case R.id.custome_device_menu:
+                CustomeDevice();
+                break;
             case R.id.exit_menu:
                 ExitProgram();
+                break;
+            case R.id.reboot_menu:
+                reboot();
                 break;
             case android.R.id.home:
                 return true;
@@ -186,15 +196,88 @@ public class MainActivity extends BaseActivity  {
         return false;
     }
 
+    private boolean stringIsMac(String val) {
+        String trueMacAddress = "([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}";
+        // 这是真正的MAV地址；正则表达式；
+
+        if (val.matches(trueMacAddress)) {
+            return true;
+
+        } else {
+            return false;
+        }
+    }
+
+    //自定义mac地址
+    private void CustomeDevice() {
+
+        final EditText inputServer = new EditText(this);
+
+        inputServer.setFilters(new InputFilter[]{new InputFilter.LengthFilter(17)});
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        builder.setTitle("请输入自定义的mac地址 (如 12:B4:8E:66:99:AA ) ").setView(inputServer)
+
+                .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+
+                    @Override
+                    public void onClick(DialogInterface dialog, int i) {
+                        dialog.dismiss();
+                    }
+                });
+
+        builder.setCancelable(false).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+
+
+            }
+
+        });
+        AlertDialog dialog = builder.create();
+        dialog.setOnShowListener(new DialogInterface.OnShowListener() {
+            @Override
+            public void onShow(DialogInterface dialogInterface) {
+                Button btnPositive = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                btnPositive.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+
+                        String mac = inputServer.getText().toString();
+
+                        if(mac!=null && !mac.isEmpty())
+                        {
+                            if(stringIsMac(mac))
+                            {
+                                XSPUtils.setString("mac",mac.toUpperCase());
+                                MainActivity.self.readConfig();
+                                dialog.dismiss();
+                            }
+                            else{
+                                Toast.makeText(MainActivity.this,"请输入正确的mac地址！",Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        else
+                        {
+                            Toast.makeText(MainActivity.this,"输入为空！",Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            }
+        });
+        dialog.show();
+    }
+
     private void ClearDevice()
     {
-        String helpstr = "确认后将恢复软件绑定的解锁设备，请使用系统自带的蓝牙解锁设备绑定功能！";
+        String helpstr = "确认后将清除软件绑定的解锁设备，请使用系统自带的蓝牙解锁设备绑定功能！";
         AlertDialog.Builder builder = new AlertDialog.Builder(self);
         builder.setMessage(helpstr);
         builder.setCancelable(false);
-        builder.setTitle("是否确认");
+        builder.setTitle("是否启用基础模式");
         builder.setPositiveButton("确认",(dialog, which) -> {
-            XSPUtils.setString("mac","");
+            XSPUtils.setString("mac",XSPUtils.BASE_MODE);
+            MainActivity.self.readConfig();
             dialog.dismiss();
         });
         builder.setNegativeButton("取消", (dialog, which) -> {
@@ -287,6 +370,23 @@ public class MainActivity extends BaseActivity  {
     static BluetoothGatt bluetoothGattInstance = null;
     String mac = "";
 
+    private boolean IsEmptyOrNull(String data)
+    {
+        if(data==null)
+        {
+            return true;
+        }
+        return data.isEmpty();
+    }
+
+    private static void reboot() {
+        try {
+            XSPUtils.execRootCmdSilent("reboot");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
@@ -295,7 +395,12 @@ public class MainActivity extends BaseActivity  {
             editText.setText(text);
 
             mac = XSPUtils.getString("mac", "", 0);
-            if (mac != null && !mac.isEmpty()) {
+            if(XSPUtils.BASE_MODE.equals(mac))
+            {
+                readBaseMode();
+                return;
+            }
+            if (!IsEmptyOrNull(mac)) {
 
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
                     initPermission();
@@ -311,17 +416,22 @@ public class MainActivity extends BaseActivity  {
                 bean.setStatus(device.getBondState() == BluetoothDevice.BOND_BONDED);
                 DeviceBean data= bean;
                 if (data == null) return;
-                Adapter.txtAddress.setText(data.getName().isEmpty()?"Unknown":data.getName());
-                Adapter.txtMac.setText(data.getAddress().isEmpty()?"Unknown":data.getAddress());
+                Adapter.txtAddress.setText(IsEmptyOrNull(data.getName())?"Unknown":data.getName());
+                Adapter.txtMac.setText(IsEmptyOrNull (data.getAddress())?"Unknown":data.getAddress());
                 Adapter.txtRssi.setText("");
                 Adapter.txtTime.setText("");
                 Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(-120));
                 Adapter.txtDesc.setVisibility(data.isStatus()?View.VISIBLE:View.GONE);
+                boolean rdRemoteRssi=false;
+                if(bluetoothGattInstance==null)
+                {
+                    initbluetoothGattInstance (mac);
+                }
+                Thread.yield();
+                Thread.sleep(100);
+                Thread.yield();
+                rdRemoteRssi = bluetoothGattInstance.readRemoteRssi();
 
-
-                initbluetoothGattInstance(mac);
-
-                boolean rdRemoteRssi = bluetoothGattInstance.readRemoteRssi();
                 if(!rdRemoteRssi)
                 {
                     myLog("第一次读取rssi失败，重试一次 ");
@@ -341,7 +451,7 @@ public class MainActivity extends BaseActivity  {
                     }
                 }
             }else{
-                readNoDevice();
+                readBaseMode();
             }
 
         } catch (Exception e) {
@@ -355,7 +465,7 @@ public class MainActivity extends BaseActivity  {
     {
             BluetoothAdapter mDefaultBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
             BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
-            bluetoothGattInstance = device.connectGatt(this.getApplicationContext(), false, new BluetoothGattCallback() {
+            bluetoothGattInstance = device.connectGatt(this.getApplicationContext(), true, new BluetoothGattCallback() {
                 @SuppressLint("MissingPermission")
                 @Override
                 public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
@@ -371,6 +481,16 @@ public class MainActivity extends BaseActivity  {
     }
 
     private long lstClickTime=0;
+
+    private void readBaseMode()
+    {
+        Adapter.txtAddress.setText("当前处于基础模式");
+        Adapter.txtMac.setText("请前往系统设置设置解锁设备");
+        Adapter.txtRssi.setText("");
+        Adapter.txtTime.setText("");
+        Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(0));
+        Adapter.txtDesc.setVisibility(View.GONE);
+    }
 
     private void readNoDevice()
     {

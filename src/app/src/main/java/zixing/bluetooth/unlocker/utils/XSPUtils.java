@@ -6,11 +6,14 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 
 import de.robv.android.xposed.XposedBridge;
 import zixing.bluetooth.unlocker.activity.MainActivity;
@@ -30,7 +33,6 @@ public class XSPUtils {
 
         }
     }
-
 
     public static Context catchContext;
     public static Object lockobj = new Object();
@@ -217,6 +219,41 @@ public class XSPUtils {
             }
         }
         return result;
+    }
+
+    public static final String BASE_MODE="basemode";
+
+    public static void clearSettingString()
+    {
+        try{
+                synchronized (lockobj) {
+                    File file = new File("/sdcard/Android/data/com.android.settings/config_mac.ini");
+                    FileOutputStream fis = new FileOutputStream(file);
+                    BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fis));
+                    br.write("");
+                    br.close();
+                    fis.close();
+            }
+        }catch (Exception ex)
+        {
+            myLog("写入com.android.settings/config.ini失败"+ex);
+        }
+    }
+    public static void clearSystemUIString()
+    {
+        try{
+            synchronized(lockobj) {
+                File file = new File("/sdcard/Android/data/com.android.systemui/config_mac.ini");
+                FileOutputStream fis = new FileOutputStream(file);
+                BufferedWriter br = new BufferedWriter(new OutputStreamWriter(fis));
+                br.write("");
+                br.close();
+                fis.close();
+            }
+        }catch (Exception ex)
+        {
+            myLog("写入com.android.settings/config.ini失败"+ex);
+        }
     }
 
     public static boolean setString(String key,String def){

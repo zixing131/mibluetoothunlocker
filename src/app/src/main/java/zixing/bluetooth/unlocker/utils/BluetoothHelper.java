@@ -137,6 +137,8 @@ public class BluetoothHelper {
         });
     }
     static int baseRSSI;
+
+
     //type1是setting，2是系统界面，0是软件本体
     @SuppressLint("MissingPermission")
     public static void CanUnlockByBluetoothOldDirect(Context context,String mac, ClassLoader classLoader, int type) {
