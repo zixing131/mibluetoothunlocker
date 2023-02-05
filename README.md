@@ -23,6 +23,8 @@ mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
 3.5版本添加了选择设备和手动输入mac地址的功能，lsp模块中加入推荐勾选
 
+3.6版本搜索设备时可以选择已绑定过的设备，优化蓝牙获取rssi的稳定性
+
 3.5版本下载地址
 https://wwjw.lanzoue.com/iay3k0j2lk5i
 密码:52pj
