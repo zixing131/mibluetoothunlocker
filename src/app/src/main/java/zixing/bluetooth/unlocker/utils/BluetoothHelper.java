@@ -104,6 +104,17 @@ public class BluetoothHelper {
         BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
         bluetoothGattInstance = device.connectGatt(context,false,new BluetoothGattCallback()
         {
+            @SuppressLint("MissingPermission")
+            @Override
+            public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                super.onConnectionStateChange(gatt, status, newState);
+                if (newState==BluetoothGatt.STATE_DISCONNECTED){
+                    if (bluetoothGattInstance!=null)
+                        bluetoothGattInstance.disconnect();
+                }
+                bluetoothGattInstance=gatt;
+            }
+
             @Override
             public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
                 super.onReadRemoteRssi(gatt, rssi, status);

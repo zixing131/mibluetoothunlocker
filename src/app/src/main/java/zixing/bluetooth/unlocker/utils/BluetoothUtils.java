@@ -10,6 +10,7 @@ import android.util.Log;
 
 
 import java.util.ArrayList;
+import java.util.Set;
 
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 
@@ -34,6 +35,36 @@ public class BluetoothUtils {
         this.context = context;
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         registerBroadcas(context);
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private void initBondBluetooth() {
+        //获取蓝牙适配器
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        //得到已匹配的蓝牙设备列表
+        @SuppressLint("MissingPermission") Set<BluetoothDevice> bondedDevices = bluetoothAdapter.getBondedDevices();
+        if(bondedDevices!=null && bondedDevices.size()>0)
+        {
+            for (BluetoothDevice device:bondedDevices
+                 ) {
+                    int rssi = 3;
+                    DeviceBean bean=new DeviceBean();
+                    bean.setAddress(device.getAddress());
+                    bean.setRssi(rssi);
+                    bean.setName(device.getName());
+                    bean.setDistance(getDistance(rssi));
+                    bean.setStatus(device.getBondState() == BluetoothDevice.BOND_BONDED);
+                    deviceBeans.add(bean);
+                    if(!dev_mac_adress.contains(device.getAddress())){
+                        dev_mac_adress += device.getAddress();
+                        bluetoothInterface.addBluetoothDervice(bean);
+                    }else {
+                        bluetoothInterface.updateBluetoothDervice(bean);
+                    }
+                    Log.e(TAG,device.getName()+"："+device.getAddress()+" "+rssi+"  "+bean.getDistance());
+            }
+        }
     }
 
     public  void setBluetoothListener(BluetoothInterface bluetoothInterface){
@@ -115,6 +146,7 @@ public class BluetoothUtils {
     /** 开始搜索 */
     @SuppressLint("MissingPermission")
     public void startDiscovery(){
+        initBondBluetooth();
         if (bluetoothAdapter !=null && bluetoothAdapter.isEnabled()){
             bluetoothAdapter.startDiscovery();
         }
@@ -137,10 +169,12 @@ public class BluetoothUtils {
     }
 
     public void onDestroy(){
+        cancelDiscovery();
        if(context!=null)
        {
            context.unregisterReceiver(bluetoothBroadcast);
        }
+       bluetoothInstance = null;
     }
 
     public interface BluetoothInterface{
