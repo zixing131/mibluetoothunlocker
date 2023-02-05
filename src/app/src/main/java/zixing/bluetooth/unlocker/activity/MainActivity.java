@@ -6,12 +6,14 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothProfile;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputFilter;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -141,13 +143,12 @@ public class MainActivity extends BaseActivity  {
                 break;
             case  R.id.fabmain:
                 long nowtime = System.currentTimeMillis();
-                if(nowtime - lstClickTime< 5000)
+                if(nowtime - lstClickTime< 1000)
                 {
-                    Tt("请不要频繁点击刷新！");
                     return;
                 }
                 lstClickTime=nowtime;
-                Tt("开始刷新...");
+                //Tt("开始刷新...");
                 readConfig();
                 break;
         }
@@ -216,6 +217,11 @@ public class MainActivity extends BaseActivity  {
         inputServer.setFilters(new InputFilter[]{new InputFilter.LengthFilter(17)});
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        if(!TextUtils.isEmpty(mac))
+        {
+            inputServer.setText(mac);
+        }
 
         builder.setTitle("请输入自定义的mac地址 (如 12:B4:8E:66:99:AA ) ").setView(inputServer)
 
@@ -387,6 +393,58 @@ public class MainActivity extends BaseActivity  {
         }
     }
 
+    BluetoothGatt mLastGatt;
+
+    /**
+     * 客户端连接服务端
+     * @param device 已检查到的蓝牙设备
+     */
+    @SuppressLint("MissingPermission")
+    private void connect(BluetoothDevice device) {
+        if (device != null) {
+
+            if(mLastGatt!=null)
+            {
+                if(!mLastGatt.getDevice().getAddress().equals(device))
+                {
+                    mLastGatt.disconnect();
+                    mLastGatt.close();
+                    mLastGatt=null;
+                }
+            }
+            if(mLastGatt==null)
+            {
+                // 好多个回调方法,有用到请自行添加
+                BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
+                    @SuppressLint("MissingPermission")
+                    @Override
+                    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+                        super.onConnectionStateChange(gatt, status, newState);
+                        if (newState==BluetoothGatt.STATE_DISCONNECTED){
+                            if (mLastGatt!=null)
+                                mLastGatt.disconnect();
+                        }
+                        mLastGatt=gatt;
+                        gatt.readRemoteRssi();
+                    }
+                    @Override
+                    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+                        super.onReadRemoteRssi(gatt, rssi, status);
+                        myLog("信号强度："+rssi);
+                        self.runOnUiThread(()->{
+                            Adapter.txtRssi.setText(rssi+"dB");
+                            Adapter.txtTime.setText(String.format("%.2f",  BluetoothUtils.getInstance().getDistance(rssi))+"m");
+                            Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(rssi));
+                        });
+                    }
+                };
+
+                // 连接
+                mLastGatt = device.connectGatt(MainActivity.this, true, bluetoothGattCallback);
+            }
+        }
+    }
+
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
@@ -422,6 +480,14 @@ public class MainActivity extends BaseActivity  {
                 Adapter.txtTime.setText("");
                 Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(-120));
                 Adapter.txtDesc.setVisibility(data.isStatus()?View.VISIBLE:View.GONE);
+
+                connect(device);
+                if(mLastGatt!=null)
+                {
+                    mLastGatt.readRemoteRssi();
+                }
+
+                /*
                 boolean rdRemoteRssi=false;
                 if(bluetoothGattInstance==null)
                 {
@@ -449,7 +515,7 @@ public class MainActivity extends BaseActivity  {
                         Tt("读取绑定设备的信号强度失败！");
                         myLog("二次读取rssi失败 ");
                     }
-                }
+                }*/
             }else{
                 readBaseMode();
             }
