@@ -13,21 +13,14 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
         android:maxSdkVersion="30" />
 
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FINE_LOCATION" />
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
-        android:name="zixing.bluetooth.unlocker.MyApp"
         android:allowBackup="true"
         android:preserveLegacyExternalStorage="true"
         android:requestLegacyExternalStorage="true"
@@ -46,12 +39,7 @@
             </intent-filter>
         </activity>
 
-
         <activity android:name=".activity.DeviceActivity" />
-
-        <service android:name="zixing.bluetooth.unlocker.utils.BluetoothServiceHelper" android:enabled="true" android:foregroundServiceType="connectedDevice"/>
-
-
         <meta-data
             android:name="xposedmodule"
             android:value="true" />
