@@ -1,7 +1,9 @@
-package zixing.bluetooth.unlocker.utils;
+package zixing.bluetooth.unlocker.interfaces;
 
 
 import android.bluetooth.BluetoothGattService;
+
+import zixing.bluetooth.unlocker.utils.Device;
 
 /* loaded from: classes.dex */
 public interface IBluetoothLeConnection extends IBluetoothLeBasicConnection {

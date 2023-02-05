@@ -4,45 +4,40 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCallback;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.InputFilter;
+import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.umeng.analytics.MobclickAgent;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
 import zixing.bluetooth.unlocker.R;
-import zixing.bluetooth.unlocker.Xp.MyXp;
 import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
-import zixing.bluetooth.unlocker.adapter.DerviceAdapter$MyViewHolder_ViewBinding;
+
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
+import zixing.bluetooth.unlocker.interfaces.RssiCallBack;
 import zixing.bluetooth.unlocker.utils.XSPUtils;
+import zixing.bluetooth.unlocker.utils.BluetoothServiceHelper;
 
 /**
  * Author:紫星
@@ -141,7 +136,11 @@ public class MainActivity extends BaseActivity  {
                 break;
             case  R.id.fabmain:
                 long nowtime = System.currentTimeMillis();
-                if(nowtime - lstClickTime< 5000)
+                if(nowtime - lstClickTime< 1000)
+                {
+                    return;
+                }
+                else if(nowtime - lstClickTime< 3000)
                 {
                     Tt("请不要频繁点击刷新！");
                     return;
@@ -234,6 +233,10 @@ public class MainActivity extends BaseActivity  {
             }
 
         });
+        if(!TextUtils.isEmpty(this.mac))
+        {
+            inputServer.setText(this.mac);
+        }
         AlertDialog dialog = builder.create();
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {
             @Override
@@ -265,6 +268,7 @@ public class MainActivity extends BaseActivity  {
                 });
             }
         });
+
         dialog.show();
     }
 
@@ -345,7 +349,11 @@ public class MainActivity extends BaseActivity  {
                 "(b)为提供您所要求的产品和服务，而必须和第三方分享您的个人信息；\n" +
                 "(c) 根据法律的有关规定，或者行政或司法机构的要求，向第三方或者行政、司法机构披露；\n" +
                 "(d) 如您出现违反中国有关法律、法规或者本应用服务协议或相关规则的情况，需要向第三方披露；\n" +
-                "(e) 如您是适格的知识产权投诉人并已提起投诉，应被投诉人要求，向被投诉人披露，以便双方处理可能的权利纠纷；" +
+                "(e) 如您是适格的知识产权投诉人并已提起投诉，应被投诉人要求，向被投诉人披露，以便双方处理可能的权利纠纷；\n\n" +
+                "使用SDK名称：友盟+SDK\n" +
+                "服务类型：请根据SDK提供功能填写\n" +
+                "收集个人信息类型：设备信息（IMEI/Mac/android ID/IDFA/OPENUDID/GUID/SIM卡IMSI/地理位置信息）\n" +
+                "隐私权政策链接：https://www.umeng.com/page/policy\n\n"+
                 "4.本隐私政策的更改\n" +
                 "(a)如果决定更改隐私政策，我们会在本政策中、本公司网站中以及我们认为适当的位置发布这些更改，以便您了解我们如何收集、使用您的个人信息，哪些人可以访问这些信息，以及在什么情况下我们会透露这些信息。\n" +
                 "(b)本应用保留随时修改本政策的权利，因此请经常查看。如对本政策作出重大更改，本应用会通过网站通知的形式告知。\n" +
@@ -361,13 +369,23 @@ public class MainActivity extends BaseActivity  {
         builder.create().show();
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        MobclickAgent.onResume(this);
+    }
+    @Override
+    public void onPause() {
+        super.onPause();
+        MobclickAgent.onPause(this);
+    }
 
     private void openActList() {
         Intent intent = new Intent(MainActivity.this, DeviceActivity.class);
         startActivity(intent);
     }
 
-    static BluetoothGatt bluetoothGattInstance = null;
+    //static BluetoothGatt bluetoothGattInstance = null;
     String mac = "";
 
     private boolean IsEmptyOrNull(String data)
@@ -386,6 +404,8 @@ public class MainActivity extends BaseActivity  {
             e.printStackTrace();
         }
     }
+
+    BluetoothServiceHelper bluetoothServiceHelper;
 
     @SuppressLint("MissingPermission")
     public void readConfig() {
@@ -422,7 +442,28 @@ public class MainActivity extends BaseActivity  {
                 Adapter.txtTime.setText("");
                 Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(-120));
                 Adapter.txtDesc.setVisibility(data.isStatus()?View.VISIBLE:View.GONE);
-                boolean rdRemoteRssi=false;
+
+                if(bluetoothServiceHelper==null)
+                {
+                    Intent it1;
+                    it1=new Intent(MainActivity.this,BluetoothServiceHelper.class);
+                    startService(it1);
+
+                    /*bluetoothServiceHelper = new BluetoothServiceHelper(device, new RssiCallBack() {
+                        @Override
+                        public void processResponse(int rssi) {
+                            myLog("信号强度："+rssi);
+                            self.runOnUiThread(()->{
+                                Adapter.txtRssi.setText(rssi+"dB");
+                                Adapter.txtTime.setText(String.format("%.2f",  BluetoothUtils.getInstance().getDistance(rssi))+"m");
+                                Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(rssi));
+                            });
+                        }
+                    });*/
+                }
+                bluetoothServiceHelper.readRemoteRssi();
+
+                /*boolean rdRemoteRssi=false;
                 if(bluetoothGattInstance==null)
                 {
                     initbluetoothGattInstance (mac);
@@ -449,7 +490,8 @@ public class MainActivity extends BaseActivity  {
                         Tt("读取绑定设备的信号强度失败！");
                         myLog("二次读取rssi失败 ");
                     }
-                }
+                }*/
+
             }else{
                 readBaseMode();
             }
@@ -460,6 +502,7 @@ public class MainActivity extends BaseActivity  {
         }
     }
 
+/*
     @SuppressLint("MissingPermission")
     private  void initbluetoothGattInstance(String mac)
     {
@@ -479,6 +522,7 @@ public class MainActivity extends BaseActivity  {
                 }
             });
     }
+*/
 
     private long lstClickTime=0;
 

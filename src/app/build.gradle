@@ -2,6 +2,20 @@ plugins {
     id 'com.android.application'
 }
 android {
+    signingConfigs {
+        debug {
+            storeFile file('D:\\study\\project\\mibluetoothunlocker\\key.jks')
+            storePassword '1311817771@qq.com'
+            keyPassword '1311817771@qq.com'
+            keyAlias 'zx'
+        }
+        release {
+            storeFile file('D:\\study\\project\\mibluetoothunlocker\\key.jks')
+            storePassword '1311817771@qq.com'
+            keyPassword '1311817771@qq.com'
+            keyAlias 'zx'
+        }
+    }
     compileSdk 31
 
     defaultConfig {
@@ -40,4 +54,9 @@ dependencies {
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    // 友盟统计SDK
+    implementation  'com.umeng.umsdk:common:9.4.7'// 必选
+    implementation  'com.umeng.umsdk:asms:1.4.0'// 必选
+
 }

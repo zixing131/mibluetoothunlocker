@@ -1,35 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="DesignSurface">
-    <option name="filePathToZoomLevelMap">
-      <map>
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/drawable/progress_large.xml" value="0.2055" />
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/layout/activity_add_device.xml" value="0.13360507246376813" />
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/layout/activity_main.xml" value="0.1" />
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/layout/inclue_recyclerview.xml" value="0.25" />
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/layout/item_dervice.xml" value="0.45" />
-        <entry key="..\:/Android/Project/bluetooth/app/src/main/res/menu/sort_menu.xml" value="0.24322916666666666" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/ic123.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/ic222.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/ic___bk.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/progress_large.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/drawable/tv_desc.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/activity_add_device.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/activity_main.xml" value="0.3515625" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/include_about.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/include_toolbar.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/inclue_recyclerview.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/layout/item_dervice.xml" value="0.358695652173913" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/menu/right_menu.xml" value="0.36614583333333334" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/menu/sort_menu.xml" value="0.36614583333333334" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.1955" />
-        <entry key="..\:/Users/zixing/Documents/GitHub/mibluetoothunlocker/src/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" value="0.1955" />
-      </map>
-    </option>
-  </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="Embedded JDK" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/build/classes" />
   </component>
   <component name="ProjectType">
