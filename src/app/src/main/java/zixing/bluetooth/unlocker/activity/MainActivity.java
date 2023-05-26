@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
-import android.bluetooth.BluetoothProfile;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -15,36 +14,29 @@ import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.inuker.bluetooth.library.BluetoothClient;
 
-import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
 import zixing.bluetooth.unlocker.R;
-import zixing.bluetooth.unlocker.Xp.MyXp;
 import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
-import zixing.bluetooth.unlocker.adapter.DerviceAdapter$MyViewHolder_ViewBinding;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
-import zixing.bluetooth.unlocker.utils.XSPUtils;
+import zixing.bluetooth.unlocker.utils.XSPUtils2;
 
 /**
  * Author:紫星
@@ -59,6 +51,7 @@ public class MainActivity extends BaseActivity  {
     TextInputEditText editText;
     @BindView(R.id.btnSave)
     Button btnSave;
+
 
     private List<String> mPermissionList = new ArrayList<>();
     public static MainActivity self = null;
@@ -113,7 +106,7 @@ public class MainActivity extends BaseActivity  {
     }
 
 
-
+    BluetoothClient mClient ;
     @Override
     public int getLayoutId() {
         return R.layout.activity_main;
@@ -124,13 +117,14 @@ public class MainActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         initPermission();
         self = this;
-        XSPUtils.initXSP(getApplicationContext());
+        XSPUtils2.initXSP(getApplicationContext());
         View view = this.findViewById(R.id.itemdevicemain);
         Adapter = new DerviceAdapter.MyViewHolder(view);
         if(!BluetoothUtils.getInstance().isEnabled())
         {
             BluetoothUtils.getInstance().enable();
         }
+        mClient = new BluetoothClient(this.getApplicationContext());
         initView();
     }
 
@@ -255,7 +249,7 @@ public class MainActivity extends BaseActivity  {
                         {
                             if(stringIsMac(mac))
                             {
-                                XSPUtils.setString("mac",mac.toUpperCase());
+                                XSPUtils2.setString("mac",mac.toUpperCase());
                                 MainActivity.self.readConfig();
                                 dialog.dismiss();
                             }
@@ -282,7 +276,7 @@ public class MainActivity extends BaseActivity  {
         builder.setCancelable(false);
         builder.setTitle("是否启用基础模式");
         builder.setPositiveButton("确认",(dialog, which) -> {
-            XSPUtils.setString("mac",XSPUtils.BASE_MODE);
+            XSPUtils2.setString("mac", XSPUtils2.BASE_MODE);
             MainActivity.self.readConfig();
             dialog.dismiss();
         });
@@ -332,7 +326,7 @@ public class MainActivity extends BaseActivity  {
             Tt("请输入正确的数值(-128到0)");
             return;
         }
-        Tt(XSPUtils.setString("rssi", text) ? "保存成功！" : "保存失败！");
+        Tt(XSPUtils2.setString("rssi", text) ? "保存成功！" : "保存失败！");
     }
 
     private void PrivacyPolicy() {
@@ -387,7 +381,7 @@ public class MainActivity extends BaseActivity  {
 
     private static void reboot() {
         try {
-            XSPUtils.execRootCmdSilent("reboot");
+            XSPUtils2.execRootCmdSilent("reboot");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -448,12 +442,11 @@ public class MainActivity extends BaseActivity  {
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
-            String text = XSPUtils.getString("rssi", "-50", 0);
-            XSPUtils.execRootCmdSilent("");
+            String text = XSPUtils2.getString("rssi", "-50", 0);
             editText.setText(text);
 
-            mac = XSPUtils.getString("mac", "", 0);
-            if(XSPUtils.BASE_MODE.equals(mac))
+            mac = XSPUtils2.getString("mac", "", 0);
+            if(XSPUtils2.BASE_MODE.equals(mac))
             {
                 readBaseMode();
                 return;

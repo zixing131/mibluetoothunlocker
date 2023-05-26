@@ -185,7 +185,7 @@ public class BluetoothUtils {
 
     /**
      * 根据rssi值估算出距离
-     * @param rssi信号强度
+     * @param rssi 信号强度
      * @return 距离(单位：米)
      */
 

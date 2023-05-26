@@ -47,10 +47,14 @@
             android:value="hook MIUI实现非小米手环蓝牙解锁小米手机(注意：使用本插件可能会降低系统安全性)" />
         <meta-data
             android:name="xposedminversion"
-            android:value="54" />
+            android:value="93+" />
         <meta-data
             android:name="xposedscope"
             android:value="com.android.settings;com.android.systemui" />
+        <provider android:name=".provider.SettingProvider" android:authorities="zixing.bluetooth.unlocker.provider.SettingProvider"
+            android:enabled="true"
+            android:exported="true"
+            />
 
     </application>
 
