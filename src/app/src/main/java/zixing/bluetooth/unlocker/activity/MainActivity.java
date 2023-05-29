@@ -36,7 +36,7 @@ import zixing.bluetooth.unlocker.R;
 import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
-import zixing.bluetooth.unlocker.utils.XSPUtils2;
+import zixing.bluetooth.unlocker.utils.ProviderUtil;
 
 /**
  * Author:紫星
@@ -117,7 +117,7 @@ public class MainActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         initPermission();
         self = this;
-        XSPUtils2.initXSP(getApplicationContext());
+        ProviderUtil.initXSP(getApplicationContext());
         View view = this.findViewById(R.id.itemdevicemain);
         Adapter = new DerviceAdapter.MyViewHolder(view);
         if(!BluetoothUtils.getInstance().isEnabled())
@@ -249,7 +249,7 @@ public class MainActivity extends BaseActivity  {
                         {
                             if(stringIsMac(mac))
                             {
-                                XSPUtils2.setString("mac",mac.toUpperCase());
+                                ProviderUtil.setString("mac",mac.toUpperCase());
                                 MainActivity.self.readConfig();
                                 dialog.dismiss();
                             }
@@ -276,7 +276,7 @@ public class MainActivity extends BaseActivity  {
         builder.setCancelable(false);
         builder.setTitle("是否启用基础模式");
         builder.setPositiveButton("确认",(dialog, which) -> {
-            XSPUtils2.setString("mac", XSPUtils2.BASE_MODE);
+            ProviderUtil.setString("mac", ProviderUtil.BASE_MODE);
             MainActivity.self.readConfig();
             dialog.dismiss();
         });
@@ -326,7 +326,7 @@ public class MainActivity extends BaseActivity  {
             Tt("请输入正确的数值(-128到0)");
             return;
         }
-        Tt(XSPUtils2.setString("rssi", text) ? "保存成功！" : "保存失败！");
+        Tt(ProviderUtil.setString("rssi", text) ? "保存成功！" : "保存失败！");
     }
 
     private void PrivacyPolicy() {
@@ -381,7 +381,7 @@ public class MainActivity extends BaseActivity  {
 
     private static void reboot() {
         try {
-            XSPUtils2.execRootCmdSilent("reboot");
+            ProviderUtil.execRootCmdSilent("reboot");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -442,11 +442,11 @@ public class MainActivity extends BaseActivity  {
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
-            String text = XSPUtils2.getString("rssi", "-50", 0);
+            String text = ProviderUtil.getString("rssi", "-50", 0);
             editText.setText(text);
 
-            mac = XSPUtils2.getString("mac", "", 0);
-            if(XSPUtils2.BASE_MODE.equals(mac))
+            mac = ProviderUtil.getString("mac", "", 0);
+            if(ProviderUtil.BASE_MODE.equals(mac))
             {
                 readBaseMode();
                 return;

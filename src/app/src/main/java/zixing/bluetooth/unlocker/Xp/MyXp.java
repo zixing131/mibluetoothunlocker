@@ -1,6 +1,5 @@
 package zixing.bluetooth.unlocker.Xp;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
@@ -16,12 +15,12 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import zixing.bluetooth.unlocker.utils.BluetoothHelper;
-import zixing.bluetooth.unlocker.utils.XSPUtils2;
+import zixing.bluetooth.unlocker.utils.ProviderUtil;
 
 
 public class MyXp implements IXposedHookLoadPackage {
 
-    private static void myLog(String msg)
+    public static void myLog(String msg)
     {
         Log.i("hookhelper",msg);
         XposedBridge.log(msg);
@@ -43,11 +42,12 @@ public class MyXp implements IXposedHookLoadPackage {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Context context1 = (Context) param.args[0];
-                    XSPUtils2.initXSP(context1);
-                    macrep[0] = XSPUtils2.getString("mac", "", 1);
+                    context = context1;
+                    ProviderUtil.initXSP(context1);
+                    macrep[0] = ProviderUtil.getString("mac", "", 1);
                     if(macrep[0] !=null && !macrep[0].isEmpty())
                     {
-                        if(XSPUtils2.BASE_MODE.equals(macrep[0]))
+                        if(ProviderUtil.BASE_MODE.equals(macrep[0]))
                         {
                             Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
                             c0.setAccessible(true);
@@ -78,7 +78,7 @@ public class MyXp implements IXposedHookLoadPackage {
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                              if(macrep[0] !=null && !macrep[0].isEmpty())
                              {
-                                 if(XSPUtils2.BASE_MODE.equals(macrep[0]))
+                                 if(ProviderUtil.BASE_MODE.equals(macrep[0]))
                                  {
                                      param.setResult(null);
                                  }else{
@@ -159,7 +159,6 @@ public class MyXp implements IXposedHookLoadPackage {
                     //myLog("-------------- after hook MiuiSecurityBluetoothDeviceInfoFragment.onCreate ------------");
 
 
-
                     //context = (Context)( XposedHelpers.callMethod(param.thisObject,"getContext"));
 
 
@@ -213,11 +212,12 @@ public class MyXp implements IXposedHookLoadPackage {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Context context1 = (Context) param.args[0];
-                    XSPUtils2.initXSP(context1);
-                    macrep[0] = XSPUtils2.getString("mac","",2);
+                    context = context1;
+                    ProviderUtil.initXSP(context1);
+                    macrep[0] = ProviderUtil.getString("mac","",2);
                     if(macrep[0] !=null && !macrep[0].isEmpty())
                     {
-                        if(XSPUtils2.BASE_MODE.equals(macrep[0]))
+                        if(ProviderUtil.BASE_MODE.equals(macrep[0]))
                         {
                             Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
                             c0.setAccessible(true);
@@ -226,7 +226,6 @@ public class MyXp implements IXposedHookLoadPackage {
                             XposedHelpers.callMethod(utilclass,"setBluetoothAddressToUnlock","");
                             XposedHelpers.callMethod(utilclass,"setBluetoothNameToUnlock","");
                             XposedHelpers.callMethod(utilclass,"setBluetoothKeyToUnlock","");
-
                         }else{
                             Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
                             c0.setAccessible(true);

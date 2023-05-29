@@ -23,7 +23,7 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import zixing.bluetooth.unlocker.activity.MainActivity;
 
-public class XSPUtils2 {
+public class ProviderUtil {
 
     public static final String BASE_MODE="basemode";
     private static ContentResolver resolver;
@@ -80,7 +80,12 @@ public class XSPUtils2 {
         }else{
             SPUtils.getInstance().init(applicationContext);
         }*/
-        resolver = applicationContext.getContentResolver();
+        try{
+            resolver = applicationContext.getContentResolver();
+        }catch (Exception ex)
+        {
+            myLog( " resolver is null! ");
+        }
     }
 
     //type1是setting，2是系统界面，0是软件本体
@@ -89,16 +94,28 @@ public class XSPUtils2 {
         {
             return SPUtils.getString(key,data);
         }
-       /* String xspdata =XSPUtils.getString(key,data);
-        myLog(xspdata+" xspdata");
-        return xspdata;*/
 
-        ContentValues values = new ContentValues();
-        Uri uriQuery = Uri.parse("zixing.bluetooth.unlocker.provider.SettingProvider");
-        Cursor cursor = resolver.query(uriQuery, new String[]{key,data}, null, null, null);
-        String xspdata = cursor.getString(0);;
+        try{
+            if(resolver==null)
+            {
+                return "";
+            }
+            ContentValues values = new ContentValues();
+            Uri uriQuery = Uri.parse("content://zixing.bluetooth.unlocker.provider.SettingProvider/query");
+            Cursor cursor = resolver.query(uriQuery, new String[]{key,data}, null, null, null);
 
-        myLog(xspdata+" xspdata");
-        return xspdata;
+            cursor.moveToFirst();
+            String xspdata = cursor.getString(0);;
+
+            //myLog(xspdata+" xspdata1");
+            return xspdata;
+        }
+        catch (Exception ex)
+        {
+            //myLog("xspdata2");
+            myLog(ex.toString());
+            ex.printStackTrace();
+            return data;
+        }
     }
 }

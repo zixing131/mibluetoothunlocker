@@ -48,13 +48,15 @@ public class SettingProvider  extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] arg1, String arg2, String[] arg3, String arg4) {
         if (mUriMatcher.match(uri) == QUEYSUCESS) {//uri匹配后进行下面的操作
+
             MatrixCursor cursor = new MatrixCursor(new String[]{"data"});
             String data = SPUtils.getString(arg1[0],arg1[1]);
             cursor.addRow(new String[]{data});
             getContext().getContentResolver().notifyChange(uri, null);
             return cursor;
         } else {
-            throw new IllegalArgumentException("match fail");
+            //throw new IllegalArgumentException("match fail");
+            return null;
         }
     }
 

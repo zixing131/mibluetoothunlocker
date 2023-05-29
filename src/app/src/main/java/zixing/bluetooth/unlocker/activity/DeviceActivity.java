@@ -19,7 +19,7 @@ import zixing.bluetooth.unlocker.adapter.base.BaseRecyclerViewAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.ArrUtils;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
-import zixing.bluetooth.unlocker.utils.XSPUtils2;
+import zixing.bluetooth.unlocker.utils.ProviderUtil;
 
 public class DeviceActivity extends BaseActivity implements BluetoothUtils.BluetoothInterface{
 
@@ -129,7 +129,7 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
                     builder.setPositiveButton("确定", (dialog, which) -> {
                         dialog.dismiss();
                         //这里保存数据
-                        XSPUtils2.setString("mac",bean.getAddress());
+                        ProviderUtil.setString("mac",bean.getAddress());
                         self.finish();
                         MainActivity.self.runOnUiThread(()->{
                             MainActivity.self. readConfig();
