@@ -21,6 +21,7 @@ import java.io.OutputStreamWriter;
 
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
+import zixing.bluetooth.unlocker.Xp.MyXp;
 import zixing.bluetooth.unlocker.activity.MainActivity;
 
 public class ProviderUtil {
@@ -94,16 +95,21 @@ public class ProviderUtil {
         {
             return SPUtils.getString(key,data);
         }
-
         try{
+            if(i==2 && MyXp.canUnlockByBleAndReadConfig()==false)
+            {
+                return data;
+            }
             if(resolver==null)
             {
                 return "";
             }
-            ContentValues values = new ContentValues();
             Uri uriQuery = Uri.parse("content://zixing.bluetooth.unlocker.provider.SettingProvider/query");
             Cursor cursor = resolver.query(uriQuery, new String[]{key,data}, null, null, null);
-
+            if(cursor==null)
+            {
+                return data;
+            }
             cursor.moveToFirst();
             String xspdata = cursor.getString(0);;
 
@@ -117,5 +123,6 @@ public class ProviderUtil {
             ex.printStackTrace();
             return data;
         }
+
     }
 }

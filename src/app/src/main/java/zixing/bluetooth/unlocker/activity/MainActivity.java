@@ -37,6 +37,7 @@ import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
 import zixing.bluetooth.unlocker.utils.ProviderUtil;
+import zixing.bluetooth.unlocker.utils.SPUtils;
 
 /**
  * Author:紫星
@@ -117,6 +118,7 @@ public class MainActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         initPermission();
         self = this;
+        SPUtils.getInstance().init(getApplicationContext());
         ProviderUtil.initXSP(getApplicationContext());
         View view = this.findViewById(R.id.itemdevicemain);
         Adapter = new DerviceAdapter.MyViewHolder(view);
