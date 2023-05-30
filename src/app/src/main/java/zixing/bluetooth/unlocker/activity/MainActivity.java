@@ -18,14 +18,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 
 import com.google.android.material.textfield.TextInputEditText;
-import com.inuker.bluetooth.library.BluetoothClient;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,7 +37,7 @@ import zixing.bluetooth.unlocker.R;
 import zixing.bluetooth.unlocker.adapter.DerviceAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
-import zixing.bluetooth.unlocker.utils.ProviderUtil;
+import zixing.bluetooth.unlocker.utils.ConfigUtil;
 import zixing.bluetooth.unlocker.utils.SPUtils;
 
 /**
@@ -107,7 +108,6 @@ public class MainActivity extends BaseActivity  {
     }
 
 
-    BluetoothClient mClient ;
     @Override
     public int getLayoutId() {
         return R.layout.activity_main;
@@ -118,16 +118,40 @@ public class MainActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         initPermission();
         self = this;
-        SPUtils.getInstance().init(getApplicationContext());
-        ProviderUtil.initXSP(getApplicationContext());
+        SPUtils.getInstance().init(this.getApplicationContext());
+        ConfigUtil.initXSP(this.getApplicationContext());
         View view = this.findViewById(R.id.itemdevicemain);
         Adapter = new DerviceAdapter.MyViewHolder(view);
         if(!BluetoothUtils.getInstance().isEnabled())
         {
             BluetoothUtils.getInstance().enable();
         }
-        mClient = new BluetoothClient(this.getApplicationContext());
         initView();
+        Switch mSwitch = (Switch) findViewById(R.id.switchtips);
+
+        boolean ischecked = "1".equals(ConfigUtil.getString("showtips","1",0));
+
+        mSwitch.setChecked(ischecked);
+
+        // 添加监听
+        mSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(SPUtils.isEnableModule==false)
+                {
+                    Toast.makeText(self.getApplicationContext(),"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (isChecked){
+                    ConfigUtil.setString("showtips","1");
+                    Toast.makeText(self.getApplicationContext(),"已开启蓝牙解锁提示",Toast.LENGTH_SHORT).show();
+                }else {
+                    ConfigUtil.setString("showtips","0");
+                    Toast.makeText(self.getApplicationContext(),"已关闭蓝牙解锁提示",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     }
 
     @OnClick({R.id.btnSave,R.id.fabmain})
@@ -251,7 +275,7 @@ public class MainActivity extends BaseActivity  {
                         {
                             if(stringIsMac(mac))
                             {
-                                ProviderUtil.setString("mac",mac.toUpperCase());
+                                ConfigUtil.setString("mac",mac.toUpperCase());
                                 MainActivity.self.readConfig();
                                 dialog.dismiss();
                             }
@@ -278,7 +302,7 @@ public class MainActivity extends BaseActivity  {
         builder.setCancelable(false);
         builder.setTitle("是否启用基础模式");
         builder.setPositiveButton("确认",(dialog, which) -> {
-            ProviderUtil.setString("mac", ProviderUtil.BASE_MODE);
+            ConfigUtil.setString("mac", ConfigUtil.BASE_MODE);
             MainActivity.self.readConfig();
             dialog.dismiss();
         });
@@ -316,6 +340,11 @@ public class MainActivity extends BaseActivity  {
     }
 
     private void saveConfig() {
+        if(SPUtils.isEnableModule==false)
+        {
+            Toast.makeText(this.getApplicationContext(),"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
+            return;
+        }
         String text = editText.getText().toString();
         if (text.isEmpty()) return;
         try {
@@ -328,7 +357,7 @@ public class MainActivity extends BaseActivity  {
             Tt("请输入正确的数值(-128到0)");
             return;
         }
-        Tt(ProviderUtil.setString("rssi", text) ? "保存成功！" : "保存失败！");
+        Tt(ConfigUtil.setString("rssi", text) ? "保存成功！" : "保存失败！");
     }
 
     private void PrivacyPolicy() {
@@ -383,7 +412,7 @@ public class MainActivity extends BaseActivity  {
 
     private static void reboot() {
         try {
-            ProviderUtil.execRootCmdSilent("reboot");
+            ConfigUtil.execRootCmdSilent("reboot");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -444,11 +473,11 @@ public class MainActivity extends BaseActivity  {
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
-            String text = ProviderUtil.getString("rssi", "-50", 0);
+            String text = ConfigUtil.getString("rssi", "-50", 0);
             editText.setText(text);
 
-            mac = ProviderUtil.getString("mac", "", 0);
-            if(ProviderUtil.BASE_MODE.equals(mac))
+            mac = ConfigUtil.getString("mac", "", 0);
+            if(ConfigUtil.BASE_MODE.equals(mac))
             {
                 readBaseMode();
                 return;

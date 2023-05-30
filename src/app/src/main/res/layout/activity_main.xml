@@ -53,6 +53,7 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
+
         <Button
             android:textColor="@color/white"
             android:layout_marginTop="5pt"
@@ -63,6 +64,13 @@
             >
 
         </Button>
+
+        <Switch
+            android:layout_marginTop="5pt"
+            android:id="@+id/switchtips"
+            android:text="解锁提示"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"></Switch>
 
     </LinearLayout>
 

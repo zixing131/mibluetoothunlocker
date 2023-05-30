@@ -37,7 +37,7 @@ public class BluetoothHelper {
     public static boolean CanUnlockByBluetooth(Context context,String mac, ClassLoader classLoader, int type) {
         try {
             int baseRSSI = -50;
-            String rssi = ProviderUtil.getString("rssi", "-50", type);
+            String rssi = ConfigUtil.getString("rssi", "-50", type);
             baseRSSI = Integer.parseInt(rssi);
 
             myLog("-------------mac---------------" + mac + "----" + baseRSSI);
@@ -95,7 +95,7 @@ public class BluetoothHelper {
         if (mDefaultBluetoothAdapter.isEnabled() == false) {
             return ;
         }
-        String maclocal = ProviderUtil.getString("mac","",type);
+        String maclocal = ConfigUtil.getString("mac","",type);
         if(maclocal!=null && !mac.isEmpty())
         {
             mac = maclocal;
@@ -158,7 +158,7 @@ public class BluetoothHelper {
             {
                 return;
             }
-            String rssi = ProviderUtil.getString("rssi","-50",type);
+            String rssi = ConfigUtil.getString("rssi","-50",type);
             baseRSSI  = Integer.parseInt(rssi);
             if(bluetoothGattInstance==null)
             {

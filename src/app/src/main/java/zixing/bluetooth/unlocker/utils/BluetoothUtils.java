@@ -36,6 +36,12 @@ public class BluetoothUtils {
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         registerBroadcas(context);
 
+        BluetoothAdapter mDefaultBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mDefaultBluetoothAdapter.isEnabled() == false) {
+            BluetoothUtils.getInstance().enable();
+        }
+
+
     }
 
     @SuppressLint("MissingPermission")

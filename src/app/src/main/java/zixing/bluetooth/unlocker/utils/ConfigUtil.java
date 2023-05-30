@@ -19,12 +19,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
+import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
+import zixing.bluetooth.unlocker.BuildConfig;
 import zixing.bluetooth.unlocker.Xp.MyXp;
 import zixing.bluetooth.unlocker.activity.MainActivity;
 
-public class ProviderUtil {
+public class ConfigUtil {
 
     public static final String BASE_MODE="basemode";
     private static ContentResolver resolver;
@@ -70,59 +72,35 @@ public class ProviderUtil {
         return result;
     }
 
+
     public static boolean setString(String data, String value) {
         return SPUtils.setString(data,value);
     }
 
     public static void initXSP(Context applicationContext) {
-        /*if(applicationContext==null)
-        {
-            XSPUtils.getInstance();
-        }else{
-            SPUtils.getInstance().init(applicationContext);
-        }*/
-        try{
-            resolver = applicationContext.getContentResolver();
-        }catch (Exception ex)
-        {
-            myLog( " resolver is null! ");
-        }
+
+    }
+
+    private static XSharedPreferences getPref(String path) {
+        XSharedPreferences pref = new XSharedPreferences(BuildConfig.APPLICATION_ID, path);
+        return pref.getFile().canRead() ? pref : null;
     }
 
     //type1是setting，2是系统界面，0是软件本体
     public static String getString(String key, String data, int i) {
+        try{
         if(i==0)
         {
             return SPUtils.getString(key,data);
         }
-        try{
-            if(i==2 && MyXp.canUnlockByBleAndReadConfig()==false)
-            {
-                return data;
-            }
-            if(resolver==null)
-            {
-                return "";
-            }
-            Uri uriQuery = Uri.parse("content://zixing.bluetooth.unlocker.provider.SettingProvider/query");
-            Cursor cursor = resolver.query(uriQuery, new String[]{key,data}, null, null, null);
-            if(cursor==null)
-            {
-                return data;
-            }
-            cursor.moveToFirst();
-            String xspdata = cursor.getString(0);;
 
-            //myLog(xspdata+" xspdata1");
-            return xspdata;
+            return getPref("config").getString(key,data);
         }
         catch (Exception ex)
         {
-            //myLog("xspdata2");
             myLog(ex.toString());
             ex.printStackTrace();
             return data;
         }
-
     }
 }

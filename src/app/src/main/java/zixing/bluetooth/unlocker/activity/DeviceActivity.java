@@ -5,6 +5,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -19,7 +20,8 @@ import zixing.bluetooth.unlocker.adapter.base.BaseRecyclerViewAdapter;
 import zixing.bluetooth.unlocker.bean.DeviceBean;
 import zixing.bluetooth.unlocker.utils.ArrUtils;
 import zixing.bluetooth.unlocker.utils.BluetoothUtils;
-import zixing.bluetooth.unlocker.utils.ProviderUtil;
+import zixing.bluetooth.unlocker.utils.ConfigUtil;
+import zixing.bluetooth.unlocker.utils.SPUtils;
 
 public class DeviceActivity extends BaseActivity implements BluetoothUtils.BluetoothInterface{
 
@@ -122,6 +124,11 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
                 String devicename=bean.getName()+"【"+bean.getAddress()+"】";
 
                 self.runOnUiThread(()->{
+                    if(SPUtils.isEnableModule==false)
+                    {
+                        Toast.makeText(self.getApplicationContext(),"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
+                        return;
+                    }
                     AlertDialog.Builder builder = new AlertDialog.Builder(self);
                     builder.setMessage("是否选择 "+devicename +"作为解锁设备？");
                     builder.setCancelable(false);
@@ -129,7 +136,7 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
                     builder.setPositiveButton("确定", (dialog, which) -> {
                         dialog.dismiss();
                         //这里保存数据
-                        ProviderUtil.setString("mac",bean.getAddress());
+                        ConfigUtil.setString("mac",bean.getAddress());
                         self.finish();
                         MainActivity.self.runOnUiThread(()->{
                             MainActivity.self. readConfig();

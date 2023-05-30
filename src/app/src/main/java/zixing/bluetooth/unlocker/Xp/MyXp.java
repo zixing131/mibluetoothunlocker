@@ -4,11 +4,10 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
@@ -17,7 +16,7 @@ import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import zixing.bluetooth.unlocker.utils.BluetoothHelper;
-import zixing.bluetooth.unlocker.utils.ProviderUtil;
+import zixing.bluetooth.unlocker.utils.ConfigUtil;
 
 
 public class MyXp implements IXposedHookLoadPackage {
@@ -34,7 +33,7 @@ public class MyXp implements IXposedHookLoadPackage {
         if ("com.android.settings".equals(loadPackageParam.packageName)) {
 
             final Class MiuiSecurityBluetoothMatchDeviceFragmentClass =  XposedHelpers.findClass("com.android.settings.MiuiSecurityBluetoothMatchDeviceFragment", loadPackageParam.classLoader);
-            final  Class BluetoothDeviceClass = XposedHelpers.findClass("android.bluetooth.BluetoothDevice", loadPackageParam.classLoader);
+            //final  Class BluetoothDeviceClass = XposedHelpers.findClass("android.bluetooth.BluetoothDevice", loadPackageParam.classLoader);
             final Class MiuiLockPatternUtilClass = XposedHelpers.findClass("android.security.MiuiLockPatternUtils", loadPackageParam.classLoader);
 
 
@@ -45,11 +44,11 @@ public class MyXp implements IXposedHookLoadPackage {
                 protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                     Context context1 = (Context) param.args[0];
                     context = context1;
-                    ProviderUtil.initXSP(context1);
-                    macrep[0] = ProviderUtil.getString("mac", "", 1);
+                    ConfigUtil.initXSP(context1);
+                    macrep[0] = ConfigUtil.getString("mac", "", 1);
                     if(macrep[0] !=null && !macrep[0].isEmpty())
                     {
-                        if(ProviderUtil.BASE_MODE.equals(macrep[0]))
+                        if(ConfigUtil.BASE_MODE.equals(macrep[0]))
                         {
                             Constructor c0=MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
                             c0.setAccessible(true);
@@ -80,7 +79,7 @@ public class MyXp implements IXposedHookLoadPackage {
                         protected void afterHookedMethod(MethodHookParam param) throws Throwable {
                              if(macrep[0] !=null && !macrep[0].isEmpty())
                              {
-                                 if(ProviderUtil.BASE_MODE.equals(macrep[0]))
+                                 if(ConfigUtil.BASE_MODE.equals(macrep[0]))
                                  {
                                      param.setResult(null);
                                  }else{
@@ -205,7 +204,30 @@ public class MyXp implements IXposedHookLoadPackage {
         {
             final Class MiuiLockPatternUtilClass = XposedHelpers.findClass("android.security.MiuiLockPatternUtils", loadPackageParam.classLoader);
 
+            final Class MiuiKeyguardUtilsClass  = XposedHelpers.findClass("com.android.keyguard.utils.MiuiKeyguardUtils", loadPackageParam.classLoader);
+
             final String[] macrep = new String[1];
+
+            systemuiR = XposedHelpers.findClass("com.android.systemui.R$string",  loadPackageParam.classLoader);
+
+            miui_keyguard_ble_unlock_succeed_msg = XposedHelpers.getStaticIntField(systemuiR,"miui_keyguard_ble_unlock_succeed_msg");
+
+
+            XposedHelpers.findAndHookMethod(MiuiKeyguardUtilsClass, "handleBleUnlockSucceed", Context.class, new XC_MethodReplacement() {
+                @Override
+                protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                    if(!("1".equals(ConfigUtil.getString("showtips","1",2))))
+                    {
+                        //不显示提示
+                    }
+                    else{
+                        Context ctx = (Context)methodHookParam.args[0];
+                        String unlockstring = ctx.getResources().getString(miui_keyguard_ble_unlock_succeed_msg);
+                        Toast.makeText( ctx,unlockstring, Toast.LENGTH_SHORT).show();
+                    }
+                    return null;
+                }
+            });
 
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override
@@ -213,10 +235,10 @@ public class MyXp implements IXposedHookLoadPackage {
                     try {
                         Context context1 = (Context) param.args[0];
                         context = context1;
-                        ProviderUtil.initXSP(context1);
-                        macrep[0] = ProviderUtil.getString("mac", "", 2);
+                        ConfigUtil.initXSP(context1);
+                        macrep[0] = ConfigUtil.getString("mac", "", 2);
                         if (macrep[0] != null && !macrep[0].isEmpty()) {
-                            if (ProviderUtil.BASE_MODE.equals(macrep[0])) {
+                            if (ConfigUtil.BASE_MODE.equals(macrep[0])) {
                                 Constructor c0 = MiuiLockPatternUtilClass.getDeclaredConstructor(new Class[]{Context.class});
                                 c0.setAccessible(true);
                                 Object utilclass = c0.newInstance(new Object[]{context1});
@@ -242,6 +264,7 @@ public class MyXp implements IXposedHookLoadPackage {
             });
 
             final Class BluetoothControllerImplClass =  XposedHelpers.findClass("com.android.systemui.statusbar.policy.BluetoothControllerImpl",  loadPackageParam.classLoader);
+
 
             XposedBridge.hookAllConstructors(BluetoothControllerImplClass, new XC_MethodHook() {
             @Override
@@ -274,10 +297,6 @@ public class MyXp implements IXposedHookLoadPackage {
                     // myLog("-------------- after hook MiuiBleUnlockHelper ------------");
 
                     //context  = (Context)(param.args[0]);
-
-                    Field mUpdateMonitorField  = MiuiBleUnlockHelper.getDeclaredField ("mUpdateMonitor");
-                    mUpdateMonitorField.setAccessible(true);
-                    mUpdateMonitor = mUpdateMonitorField.get(param.thisObject);
 
                     Field  mBleListenerField = MiuiBleUnlockHelper.getDeclaredField ("mBleListener");
                     mBleListenerField.setAccessible(true);
@@ -315,21 +334,28 @@ public class MyXp implements IXposedHookLoadPackage {
         }
     }
 
-    //是否可以读取配置文件并且解锁
-    public static boolean canUnlockByBleAndReadConfig()
+    public static  Class systemuiR = null;
+    static int miui_keyguard_ble_unlock_succeed_msg;
+
+  /*  public static void CheckPhoneUnlock()
     {
-        if(mUpdateMonitor==null)
-        {
-            return false;
-        }
-        try {
-            return (boolean)XposedHelpers.callMethod(mUpdateMonitor,"isUnlockingWithBiometricAllowed",(false));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
-    }
-    public static Object mUpdateMonitor = null;
+        // 步骤1：通过匿名类 直接 创建线程辅助对象，即 实例化 线程辅助类
+        Runnable mt = new Runnable() {
+            // 步骤2：复写run（），定义线程行为
+            @Override
+            public void run() {
+                if(context!=null && mLockPatternUtils!=null && classLoader!=null)
+                {
+                    BluetoothHelper.CanUnlockByBluetoothOldDirect(context,XposedHelpers.callMethod(mLockPatternUtils,"getBluetoothAddressToUnlock").toString() ,classLoader,2)                             ;
+                }  else{
+                    myLog("---------------NULL context--------------"+context+mLockPatternUtils+classLoader);
+                }
+            }
+        };
+        Thread mt1 = new Thread(mt, "unlockthread");
+        mt1.start();
+        //myLog("--------------mt1 unlockthread ------------");
+    }*/
 
     public static void CheckPhoneUnlock()
     {
@@ -350,6 +376,7 @@ public class MyXp implements IXposedHookLoadPackage {
         mt1.start();
         //myLog("--------------mt1 unlockthread ------------");
     }
+
     static ClassLoader classLoader = null;
     static  Object   mLockPatternUtils=null;
     static Context context = null;

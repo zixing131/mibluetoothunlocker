@@ -1,7 +1,11 @@
 package zixing.bluetooth.unlocker.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.widget.Toast;
+
+import zixing.bluetooth.unlocker.activity.MainActivity;
 
 public class SPUtils {
 
@@ -20,13 +24,22 @@ public class SPUtils {
         return xsp;
     }
 
+    public static boolean isEnableModule=false;
     /**
      * 初始化
      *
      * @param context
      */
+    @SuppressLint("WorldReadableFiles")
     public void init(Context context) {
-        sp = context.getSharedPreferences("config", Context.MODE_PRIVATE);
+        try {
+            sp = context.getSharedPreferences("config", Context.MODE_WORLD_READABLE);
+            isEnableModule=true;
+        }catch (Exception ex)
+        {
+            isEnableModule=false;
+            Toast.makeText(context,"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**
