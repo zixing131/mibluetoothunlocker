@@ -47,14 +47,10 @@
             android:value="hook MIUI实现非小米手环蓝牙解锁小米手机(注意：使用本插件可能会降低系统安全性)" />
         <meta-data
             android:name="xposedminversion"
-            android:value="93+" />
+            android:value="93" />
         <meta-data
             android:name="xposedscope"
             android:value="com.android.settings;com.android.systemui" />
 
     </application>
-    <queries>
-        <package android:name="com.android.systemui" />
-        <package android:name="com.android.settings" />
-    </queries>
 </manifest>

@@ -8,6 +8,13 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.util.Log;
+import android.widget.Toast;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -18,6 +25,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.List;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.XposedBridge;
@@ -77,8 +88,75 @@ public class ConfigUtil {
         return SPUtils.setString(data,value);
     }
 
-    public static void initXSP(Context applicationContext) {
+    @SuppressLint("WrongConstant")
+    public static void initXSP(Context context) {
+        try {
+            if(MainActivity.self==null)
+            {
+                return;
+            }
+            if(SPUtils.isEnableModule==false)
+            {
+                return;
+            }
 
+            String mac = "";
+            String rssi="";
+            String bkdatapath = "/data/data/zixing.bluetooth.unlocker/shared_prefs/unlocker.xml";
+
+            try{
+                File file1=new File(bkdatapath);
+                //创建DOM解析工厂
+                DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+                //创建DON解析器
+                DocumentBuilder dombuild = factory.newDocumentBuilder();
+                //开始解析XML文档并且得到整个文档的对象模型
+                Document dom = dombuild.parse(file1);
+                //得到根节点下所有标签为<book>的子节点
+                NodeList bookList = dom.getElementsByTagName("map");
+                //遍历book节点
+                for (int i = 0; i < bookList.getLength(); i++) {
+                    //得到本次Book元素节点
+                    Element bookElement = (Element) bookList.item(i);
+
+                    String name =  bookElement.getTagName();
+                    if("map".equals(name))
+                    {
+                        NodeList strings = dom.getElementsByTagName("string");
+                        for (int j = 0; j < strings.getLength(); j++) {
+
+                            Element item2 = (Element) strings.item(j);
+                            String name2 =  item2.getAttribute("name");
+                            String value =  item2.getTextContent();
+                            if("mac".equals(name2))
+                            {
+                                mac = value;
+                            }else if("rssi".equals(name2))
+                            {
+                                rssi = value;
+                            }
+                        }
+                    }
+                }
+
+            }catch (Exception ex)
+            {
+            }
+            if(mac!=null && !mac.isEmpty())
+            {
+                setString("mac",mac);
+                new File(bkdatapath).delete();
+                Toast.makeText(context,"已导入旧版配置！",Toast.LENGTH_SHORT).show();
+            }
+            if(rssi!=null && !rssi.isEmpty() && !"-50".equals(rssi))
+            {
+                setString("rssi",rssi);
+            }
+
+        } catch (Exception ex)
+        {
+            myLog("----------initXSP error------------"+ex.toString());
+        }
     }
 
     private static XSharedPreferences getPref(String path) {

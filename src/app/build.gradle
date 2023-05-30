@@ -7,9 +7,9 @@ android {
     defaultConfig {
         applicationId "zixing.bluetooth.unlocker"
         minSdk 21
-        targetSdk 27
-        versionCode 37
-        versionName '3.7'
+        targetSdk 31
+        versionCode 38
+        versionName '3.8'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
