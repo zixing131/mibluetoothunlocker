@@ -72,6 +72,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"></Switch>
 
+
+        <Switch
+            android:layout_marginTop="5pt"
+            android:id="@+id/hyperosmode"
+            android:text="HyperOS兼容模式"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"></Switch>
+
+
     </LinearLayout>
 
 

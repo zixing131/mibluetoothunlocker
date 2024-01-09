@@ -2,6 +2,7 @@ package zixing.bluetooth.unlocker.Xp;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -207,27 +208,30 @@ public class MyXp implements IXposedHookLoadPackage {
             final Class MiuiKeyguardUtilsClass  = XposedHelpers.findClass("com.android.keyguard.utils.MiuiKeyguardUtils", loadPackageParam.classLoader);
 
             final String[] macrep = new String[1];
+            boolean ischeckedhyperos = "1".equals(ConfigUtil.getString("hyperosmode","1",2));
+            if (ischeckedhyperos== false) {
+                //这里是安卓14以下的版本，理论上安卓13的hyperos不知道会不会有类似问题，待讨论
+                systemuiR = XposedHelpers.findClass("com.android.systemui.R$string",  loadPackageParam.classLoader);
+                miui_keyguard_ble_unlock_succeed_msg = XposedHelpers.getStaticIntField(systemuiR,"miui_keyguard_ble_unlock_succeed_msg");
 
-            systemuiR = XposedHelpers.findClass("com.android.systemui.R$string",  loadPackageParam.classLoader);
 
-            miui_keyguard_ble_unlock_succeed_msg = XposedHelpers.getStaticIntField(systemuiR,"miui_keyguard_ble_unlock_succeed_msg");
-
-
-            XposedHelpers.findAndHookMethod(MiuiKeyguardUtilsClass, "handleBleUnlockSucceed", Context.class, new XC_MethodReplacement() {
-                @Override
-                protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
-                    if(!("1".equals(ConfigUtil.getString("showtips","1",2))))
-                    {
-                        //不显示提示
+                XposedHelpers.findAndHookMethod(MiuiKeyguardUtilsClass, "handleBleUnlockSucceed", Context.class, new XC_MethodReplacement() {
+                    @Override
+                    protected Object replaceHookedMethod(MethodHookParam methodHookParam) throws Throwable {
+                        if(!("1".equals(ConfigUtil.getString("showtips","1",2))))
+                        {
+                            //不显示提示
+                        }
+                        else{
+                            Context ctx = (Context)methodHookParam.args[0];
+                            String unlockstring = ctx.getResources().getString(miui_keyguard_ble_unlock_succeed_msg);
+                            Toast.makeText( ctx,unlockstring, Toast.LENGTH_SHORT).show();
+                        }
+                        return null;
                     }
-                    else{
-                        Context ctx = (Context)methodHookParam.args[0];
-                        String unlockstring = ctx.getResources().getString(miui_keyguard_ble_unlock_succeed_msg);
-                        Toast.makeText( ctx,unlockstring, Toast.LENGTH_SHORT).show();
-                    }
-                    return null;
-                }
-            });
+                });
+
+            }
 
             XposedHelpers.findAndHookMethod(Application.class, "attach", Context.class, new XC_MethodHook() {
                 @Override

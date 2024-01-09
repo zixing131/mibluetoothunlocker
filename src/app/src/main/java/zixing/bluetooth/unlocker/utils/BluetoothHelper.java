@@ -88,6 +88,7 @@ public class BluetoothHelper {
         return false;
     }
     //public static Object BluetoothControllerImplInstance = null;
+    public static String macOld = "";
     @SuppressLint("MissingPermission")
     private static void initbluetoothGattInstance(Context context,String mac, ClassLoader classLoader, int type)
     {
@@ -100,7 +101,7 @@ public class BluetoothHelper {
         {
             mac = maclocal;
         }
-
+        macOld=mac;
         BluetoothDevice device = mDefaultBluetoothAdapter.getRemoteDevice(mac);
         bluetoothGattInstance = device.connectGatt(context,false,new BluetoothGattCallback()
         {
@@ -154,13 +155,19 @@ public class BluetoothHelper {
     @SuppressLint("MissingPermission")
     public static void CanUnlockByBluetoothOldDirect(Context context,String mac, ClassLoader classLoader, int type) {
         try {
+            String mac2 = ConfigUtil.getString("mac","",type);
+            if(!ConfigUtil.BASE_MODE.equals(mac2))
+            {
+                mac = mac2;
+            }
+            myLog("mac is "+mac);
             if(mac==null || mac.isEmpty())
             {
                 return;
             }
             String rssi = ConfigUtil.getString("rssi","-50",type);
             baseRSSI  = Integer.parseInt(rssi);
-            if(bluetoothGattInstance==null)
+            if(bluetoothGattInstance==null || !mac.equals(macOld))
             {
                 initbluetoothGattInstance(context,mac,classLoader,type);
             }
