@@ -27,8 +27,12 @@ mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
 3.7版本 配置文件保存读取不再需要root权限，添加关闭蓝牙解锁提示的功能
 
+4.0版本加入hyperos兼容模式（hyperos兼容模式下不可关闭解锁提示），修复了一些已知问题
+
+
 3.7版本下载地址：
 https://wwjw.lanzoum.com/iXgcM0xpeyxa
+
 
 3.5版本下载地址
 https://wwjw.lanzoue.com/iay3k0j2lk5i
