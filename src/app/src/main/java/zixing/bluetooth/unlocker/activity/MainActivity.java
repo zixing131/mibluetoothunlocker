@@ -127,7 +127,38 @@ public class MainActivity extends BaseActivity  {
             BluetoothUtils.getInstance().enable();
         }
         initView();
+
+        Switch hyperosmodeSwitch = (Switch) findViewById(R.id.hyperosmode);
+        boolean ischeckedhyperos = "1".equals(ConfigUtil.getString("hyperosmode","1",0));
+
         Switch mSwitch = (Switch) findViewById(R.id.switchtips);
+
+        hyperosmodeSwitch.setChecked(ischeckedhyperos);
+        hyperosmodeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(SPUtils.isEnableModule==false)
+                {
+                    Toast.makeText(self.getApplicationContext(),"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                if (isChecked){
+                    ConfigUtil.setString("hyperosmode","1");
+                    mSwitch.setVisibility(View.INVISIBLE);
+                    Toast.makeText(self.getApplicationContext(),"已开启HyperOS兼容模式",Toast.LENGTH_SHORT).show();
+                }else {
+                    ConfigUtil.setString("hyperosmode","0");
+                    mSwitch.setVisibility(View.VISIBLE);
+                    Toast.makeText(self.getApplicationContext(),"已关闭HyperOS兼容模式",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+
+        if(ischeckedhyperos)
+        {
+            mSwitch.setVisibility(View.INVISIBLE);
+        }
 
         boolean ischecked = "1".equals(ConfigUtil.getString("showtips","1",0));
 

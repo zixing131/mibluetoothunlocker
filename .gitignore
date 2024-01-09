@@ -84,3 +84,4 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 src/.idea/gradle.xml
+.DS_Store
