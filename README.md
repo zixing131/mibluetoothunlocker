@@ -29,6 +29,8 @@ mibluetoothunlocker 非小米手环蓝牙解锁小米手机的xposed插件
 
 4.0版本加入hyperos兼容模式（hyperos兼容模式下不可关闭解锁提示），修复了一些已知问题
 
+后续更新欢迎关注公众号：V安全突击队
+![V安全突击队](https://github.com/zixing131/mibluetoothunlocker/assets/18580281/c6185042-b697-4467-aa7c-f800ae2cf273)
 
 3.7版本下载地址：
 https://wwjw.lanzoum.com/iXgcM0xpeyxa
