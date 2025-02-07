@@ -49,6 +49,11 @@ import zixing.bluetooth.unlocker.utils.SPUtils;
  */
 
 public class MainActivity extends BaseActivity  {
+
+    public  static boolean isXpEnable(){
+        return false;
+    }
+
     @BindView(R.id.editText)
     TextInputEditText editText;
     @BindView(R.id.btnSave)
@@ -128,37 +133,7 @@ public class MainActivity extends BaseActivity  {
         }
         initView();
 
-        Switch hyperosmodeSwitch = (Switch) findViewById(R.id.hyperosmode);
-        boolean ischeckedhyperos = "1".equals(ConfigUtil.getString("hyperosmode","1",0));
-
         Switch mSwitch = (Switch) findViewById(R.id.switchtips);
-
-        hyperosmodeSwitch.setChecked(ischeckedhyperos);
-        hyperosmodeSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(SPUtils.isEnableModule==false)
-                {
-                    Toast.makeText(self.getApplicationContext(),"请启用模块后再进行操作！",Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                if (isChecked){
-                    ConfigUtil.setString("hyperosmode","1");
-                    mSwitch.setVisibility(View.INVISIBLE);
-                    Toast.makeText(self.getApplicationContext(),"已开启HyperOS兼容模式",Toast.LENGTH_SHORT).show();
-                }else {
-                    ConfigUtil.setString("hyperosmode","0");
-                    mSwitch.setVisibility(View.VISIBLE);
-                    Toast.makeText(self.getApplicationContext(),"已关闭HyperOS兼容模式",Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-
-        if(ischeckedhyperos)
-        {
-            mSwitch.setVisibility(View.INVISIBLE);
-        }
 
         boolean ischecked = "1".equals(ConfigUtil.getString("showtips","1",0));
 
@@ -247,7 +222,6 @@ public class MainActivity extends BaseActivity  {
         }
         return false;
     }
-
     private boolean stringIsMac(String val) {
         String trueMacAddress = "([A-Fa-f0-9]{2}:){5}[A-Fa-f0-9]{2}";
         // 这是真正的MAV地址；正则表达式；
@@ -285,6 +259,7 @@ public class MainActivity extends BaseActivity  {
                 });
 
         builder.setCancelable(false).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
             public void onClick(DialogInterface dialog, int which) {
 
 
@@ -377,7 +352,9 @@ public class MainActivity extends BaseActivity  {
             return;
         }
         String text = editText.getText().toString();
-        if (text.isEmpty()) return;
+        if (text.isEmpty()) {
+            return;
+        }
         try {
             int xinhao = Integer.parseInt(text);
             if (xinhao < -128 || xinhao > 0) {
@@ -443,7 +420,20 @@ public class MainActivity extends BaseActivity  {
 
     private static void reboot() {
         try {
-            ConfigUtil.execRootCmdSilent("reboot");
+
+            String helpstr = "确认后将重新启动手机，请确保软件拥有root权限！";
+            AlertDialog.Builder builder = new AlertDialog.Builder(self);
+            builder.setMessage(helpstr);
+            builder.setCancelable(false);
+            builder.setTitle("是否重启手机");
+            builder.setPositiveButton("确认",(dialog, which) -> {
+                ConfigUtil.execRootCmdSilent("reboot");
+                dialog.dismiss();
+            });
+            builder.setNegativeButton("取消", (dialog, which) -> {
+                dialog.dismiss();
+            });
+            builder.create().show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -477,8 +467,9 @@ public class MainActivity extends BaseActivity  {
                     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
                         super.onConnectionStateChange(gatt, status, newState);
                         if (newState==BluetoothGatt.STATE_DISCONNECTED){
-                            if (mLastGatt!=null)
+                            if (mLastGatt!=null) {
                                 mLastGatt.disconnect();
+                            }
                         }
                         mLastGatt=gatt;
                         gatt.readRemoteRssi();
@@ -504,6 +495,10 @@ public class MainActivity extends BaseActivity  {
     @SuppressLint("MissingPermission")
     public void readConfig() {
         try {
+            if(isXpEnable()==false){
+                notXp();
+                return;
+            }
             String text = ConfigUtil.getString("rssi", "-50", 0);
             editText.setText(text);
 
@@ -528,7 +523,9 @@ public class MainActivity extends BaseActivity  {
                 bean.setName(device.getName());
                 bean.setStatus(device.getBondState() == BluetoothDevice.BOND_BONDED);
                 DeviceBean data= bean;
-                if (data == null) return;
+                if (data == null) {
+                    return;
+                }
                 Adapter.txtAddress.setText(IsEmptyOrNull(data.getName())?"Unknown":data.getName());
                 Adapter.txtMac.setText(IsEmptyOrNull (data.getAddress())?"Unknown":data.getAddress());
                 Adapter.txtRssi.setText("");
@@ -607,6 +604,15 @@ public class MainActivity extends BaseActivity  {
     {
         Adapter.txtAddress.setText("当前处于基础模式");
         Adapter.txtMac.setText("请前往系统设置设置解锁设备");
+        Adapter.txtRssi.setText("");
+        Adapter.txtTime.setText("");
+        Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(0));
+        Adapter.txtDesc.setVisibility(View.GONE);
+    }
+    private void notXp()
+    {
+        Adapter.txtAddress.setText("当前模块未启用");
+        Adapter.txtMac.setText("请前往xposed设置中启用模块");
         Adapter.txtRssi.setText("");
         Adapter.txtTime.setText("");
         Adapter.imageSignal.setImageResource(DerviceAdapter.getRssiIcon(0));

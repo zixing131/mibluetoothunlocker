@@ -10,7 +10,6 @@
     android:id="@+id/itemCartView"
     android:clickable="true"
     android:focusable="true"
-    android:foreground="?attr/selectableItemBackground"
     android:layout_marginLeft="@dimen/tr_dimen_20"
     android:layout_marginRight="@dimen/tr_dimen_20"
     android:layout_marginTop="@dimen/tr_dimen_20"
