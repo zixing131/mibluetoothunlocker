@@ -266,14 +266,21 @@ public class MyXp implements IXposedHookLoadPackage {
                                                     //不显示提示
                                                     param.setResult(null);
                                                 }
-                                                bbb[0].unhook();
+
                                             }
                                         });
+                                        if(bbb[0]!=null)
+                                        {
+                                            bbb[0].unhook();
+                                        }
                                     }
-                                    aaa[0].unhook();
+
                                 }
                             });
-
+                            if(aaa[0]!=null)
+                            {
+                                aaa[0].unhook();
+                            }
                         }
                     });
                 }
