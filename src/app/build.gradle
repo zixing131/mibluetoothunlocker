@@ -5,7 +5,7 @@ plugins {
 android {
 
     namespace 'zixing.bluetooth.unlocker'
-    compileSdk 35
+    compileSdk 34
 
     buildFeatures {
         buildConfig true
@@ -29,8 +29,8 @@ android {
         minSdk 29
         //noinspection ExpiredTargetSdkVersion
         targetSdk 31
-        versionCode 51
-        versionName '5.1'
+        versionCode 55
+        versionName '5.1.3'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

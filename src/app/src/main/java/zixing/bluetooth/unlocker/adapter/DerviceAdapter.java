@@ -51,8 +51,15 @@ public class DerviceAdapter extends BaseRecyclerViewAdapter<DeviceBean> {
         MyViewHolder holder = (MyViewHolder) viewHolder;
         DeviceBean data = list.get(position);
         if (data == null) return;
-        holder.txtAddress.setText(data.getName().isEmpty()?"Unknown":data.getName());
-        holder.txtMac.setText(data.getAddress().isEmpty()?"Unknown":data.getAddress());
+        // 5.1.1：设备名可能为 null（部分已配对/未命名蓝牙设备），
+        // 直接调用 getName().isEmpty() 会触发 NPE 闪退，这里先判空再展示为 Unknown
+        String name = data.getName();
+        holder.txtAddress.setText((name == null || name.isEmpty()) ? "Unknown" : name);
+
+        // 5.1.1：MAC 地址同样可能为空，空值统一显示为 Unknown，避免选择页崩溃
+        String addr = data.getAddress();
+        holder.txtMac.setText((addr == null || addr.isEmpty()) ? "Unknown" : addr);
+        // 已还原 5.1.2 的 rssi 阈值判断（原实现未生效），恢复为 rssi < 1
         if(data.getRssi()<1)
         {
             holder.txtRssi.setText(data.getRssi()+"dB");
