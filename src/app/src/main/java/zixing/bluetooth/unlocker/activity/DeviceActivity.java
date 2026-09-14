@@ -8,9 +8,15 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.annotation.SuppressLint;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.Manifest;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -59,7 +65,11 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
 
     @Override
     public void updateBluetoothDervice(DeviceBean deviceBeans) {
-        adapter.update(deviceBeans);//刷新设备
+        if (deviceBeans == null) {
+            adapter.setList(BluetoothUtils.getInstance().getDeviceBeans());
+        } else {
+            adapter.update(deviceBeans);//刷新设备
+        }
     }
 
     @Override
@@ -136,7 +146,13 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
                     builder.setPositiveButton("确定", (dialog, which) -> {
                         dialog.dismiss();
                         //这里保存数据
-                        ConfigUtil.setString("mac",bean.getAddress());
+                        // 5.1.1：名称为 Unknown 的设备其 MAC 可能为空，
+                        // 空地址写入配置会导致后续读取/解锁异常，这里先拦截
+                        if (bean.getAddress() == null || bean.getAddress().isEmpty()) {
+                            Toast.makeText(self, "设备地址无效，无法选择", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
+                        ConfigUtil.setString("mac", bean.getAddress());
                         self.finish();
                         MainActivity.self.runOnUiThread(()->{
                             MainActivity.self. readConfig();
@@ -152,7 +168,20 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
 
             @Override
             public void OnLongClickListener(View parentV, View v, Integer position, DeviceBean values) {
-
+                DeviceBean bean = (DeviceBean) values;
+                String devicename = bean.getName() + "【" + bean.getAddress() + "】";
+                self.runOnUiThread(() -> {
+                    new AlertDialog.Builder(self)
+                            .setTitle("取消配对")
+                            .setMessage("确定要取消与 " + devicename + " 的蓝牙配对吗？")
+                            .setPositiveButton("确定", (dialog, which) -> {
+                                dialog.dismiss();
+                                removeBond(bean.getAddress());
+                            })
+                            .setNegativeButton("取消", (dialog, which) -> dialog.dismiss())
+                            .create()
+                            .show();
+                });
             }
         });
 
@@ -168,6 +197,34 @@ public class DeviceActivity extends BaseActivity implements BluetoothUtils.Bluet
         ArrUtils.sortList(adapter.getList(),"rssi",mode);
         sortMode=mode;
         adapter.notifyDataSetChanged();
+    }
+
+    @SuppressLint("MissingPermission")
+    private void removeBond(String address) {
+        if (address == null || address.isEmpty()) {
+            Toast.makeText(this, "设备地址无效", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "缺少蓝牙权限，无法取消配对", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null) {
+            Toast.makeText(this, "设备不支持蓝牙", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(address);
+        if (device == null) {
+            Toast.makeText(this, "未找到设备", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        boolean result = device.removeBond();
+        if (result) {
+            Toast.makeText(this, "正在取消配对...", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "取消配对失败", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }
