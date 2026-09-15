@@ -23,7 +23,60 @@ public class ConfigUtil {
 
     public static final String BASE_MODE = "basemode";
     public static final String REMOTE_GROUP = "config";
-    private static final String[] SYNC_KEYS = {"mac", "rssi", "showtips"};
+    private static final String[] SYNC_KEYS = {"mac", "devices", "rssi", "showtips"};
+
+    public static java.util.List<TrustedDevice> getDevices(int type) {
+        return TrustedDevice.decode(getString("devices", null, type), getString("mac", "", type));
+    }
+
+    public static java.util.List<TrustedDevice> getDevicesForCheck(int type, String nativeAddress) {
+        return TrustedDevice.resolve(getString("devices", null, type), getString("mac", "", type), nativeAddress);
+    }
+
+    public static synchronized boolean enableBasicMode() {
+        SharedPreferences local = SPUtils.getInstance().sp;
+        if (local == null || !local.edit().putString("devices", "base").putString("mac", BASE_MODE).commit()) return false;
+        XposedService service = UnlockerApp.getService();
+        if (service == null) return true;
+        try {
+            return service.getRemotePreferences(REMOTE_GROUP).edit().putString("devices", "base")
+                    .putString("mac", BASE_MODE).commit();
+        } catch (Exception ex) { myLog("sync basic mode failed: " + ex); return false; }
+    }
+
+    public static synchronized boolean saveDevices(java.util.List<TrustedDevice> devices) {
+        SharedPreferences local = SPUtils.getInstance().sp;
+        if (local == null) return false;
+        String encoded = TrustedDevice.encode(devices);
+        String primary = devices.isEmpty() ? "" : devices.get(0).address;
+        boolean saved = local.edit().putString("devices", encoded).putString("mac", primary).commit();
+        if (!saved) return false;
+        XposedService service = UnlockerApp.getService();
+        if (service != null) {
+            try {
+                return service.getRemotePreferences(REMOTE_GROUP).edit()
+                        .putString("devices", encoded).putString("mac", primary).commit();
+            } catch (Exception ex) {
+                myLog("sync devices failed: " + ex);
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static synchronized boolean putDevice(String address, String mode) {
+        TrustedDevice added = new TrustedDevice(address, mode);
+        java.util.List<TrustedDevice> devices = getDevices(0);
+        devices.removeIf(device -> device.address.equals(added.address));
+        devices.add(added);
+        return saveDevices(devices);
+    }
+
+    public static synchronized boolean removeDevice(String address) {
+        java.util.List<TrustedDevice> devices = getDevices(0);
+        if (!devices.removeIf(device -> device.address.equals(TrustedDevice.normalizeAddress(address)))) return true;
+        return saveDevices(devices);
+    }
 
     public interface RemoteConfigReader {
         String getString(String key, String def);
@@ -66,12 +119,14 @@ public class ConfigUtil {
 
     public static boolean setString(String data, String value) {
         boolean ok = SPUtils.setString(data, value);
+        if (!ok) return false;
         XposedService service = UnlockerApp.getService();
         if (service != null) {
             try {
-                service.getRemotePreferences(REMOTE_GROUP).edit().putString(data, value).commit();
+                return service.getRemotePreferences(REMOTE_GROUP).edit().putString(data, value).commit();
             } catch (Exception ex) {
                 myLog("sync remote pref failed: " + ex);
+                return false;
             }
         }
         return ok;

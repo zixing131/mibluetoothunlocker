@@ -4,7 +4,8 @@ public class DeviceBean {
 
     private String name;
     private String address;
-    private int rssi;
+    private int rssi = Integer.MIN_VALUE;
+    private int bondState = 10;
     private int time;
     private boolean status;
     private double distance;
@@ -16,6 +17,9 @@ public class DeviceBean {
     public void setDistance(double distance) {
         this.distance = distance;
     }
+    public boolean hasRssi() { return zixing.bluetooth.unlocker.utils.TrustedDevice.validRssi(rssi); }
+    public int getBondState() { return bondState; }
+    public void setBondState(int state) { bondState = state; status = state == 12; }
     public boolean isStatus() {
         return status;
     }

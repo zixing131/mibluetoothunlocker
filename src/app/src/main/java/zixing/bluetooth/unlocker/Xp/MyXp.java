@@ -2,6 +2,15 @@ package zixing.bluetooth.unlocker.Xp;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothA2dp;
+import android.bluetooth.BluetoothHeadset;
+import android.os.Looper;
+import androidx.core.content.ContextCompat;
 import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
@@ -26,6 +35,7 @@ public class MyXp extends XposedModule {
     private static final String TAG = "hookhelper";
     public static volatile MyXp instance;
     private String processName;
+    private final java.util.Set<Class<?>> listenerClasses = new java.util.HashSet<>();
 
     public MyXp() {
     }
@@ -67,6 +77,7 @@ public class MyXp extends XposedModule {
     public boolean onHotReloading(@NonNull XposedModuleInterface.HotReloadingParam param) {
         // 本模块依赖已构造的 SystemUI/Settings 实例，热更新后无法可靠找回这些对象。
         BluetoothHelper.releaseGatt();
+        BluetoothHelper.stopPassive();
         myLog("skip hot reload, reboot required. process=" + processName);
         return false;
     }
@@ -108,28 +119,80 @@ public class MyXp extends XposedModule {
         return null;
     }
 
-    private void applyBluetoothUnlockConfig(Context context1) {
+    private void applyBluetoothUnlockConfig(Context app) {
+        // Remove only the synthetic native registration written by older module versions.
+        // Custom devices are checked by this module; native BLE must not connect to them too.
         try {
-            String mac = ConfigUtil.getString("mac", "", 2);
-            if (mac == null || mac.isEmpty()) {
-                return;
+            Class<?> util = ReflectUtil.findClass("android.security.MiuiLockPatternUtils", app.getClassLoader());
+            Object settings = ReflectUtil.newInstance(util, app);
+            if ("mibluetoothunlocker".equals(ReflectUtil.callMethod(settings, "getBluetoothNameToUnlock"))) {
+                ReflectUtil.callMethod(settings, "setBluetoothUnlockEnabled", false);
+                ReflectUtil.callMethod(settings, "setBluetoothAddressToUnlock", "");
+                ReflectUtil.callMethod(settings, "setBluetoothNameToUnlock", "");
+                ReflectUtil.callMethod(settings, "setBluetoothKeyToUnlock", "");
             }
-            Class<?> utilClass = ReflectUtil.findClass("android.security.MiuiLockPatternUtils", context1.getClassLoader());
-            Object utilclass = ReflectUtil.newInstance(utilClass, context1);
-            if (ConfigUtil.BASE_MODE.equals(mac)) {
-                ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", false);
-                ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", "");
-                ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "");
-                ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "");
-            } else {
-                ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", true);
-                ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", mac);
-                ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "mibluetoothunlocker");
-                ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "mibluetoothunlocker");
-            }
-        } catch (Throwable ex) {
-            myLog("applyBluetoothUnlockConfig error: " + ex);
+        } catch (Exception | LinkageError ex) {
+            myLog("Native config migration unavailable: " + ex.getClass().getSimpleName());
         }
+    }
+
+    private boolean contextReady;
+    private void initializeContext(Context app, boolean systemUi) {
+        if (app == null || contextReady) return;
+        contextReady = true;
+        context = app.getApplicationContext() == null ? app : app.getApplicationContext();
+        applyBluetoothUnlockConfig(context);
+        if (!systemUi) return;
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        filter.addAction(BluetoothA2dp.ACTION_CONNECTION_STATE_CHANGED);
+        filter.addAction(BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
+        Handler handler = new Handler(Looper.getMainLooper());
+        Runnable check = MyXp::CheckPhoneUnlock;
+        ContextCompat.registerReceiver(context, new BroadcastReceiver() {
+            @Override public void onReceive(Context ctx, Intent intent) {
+                String action = intent.getAction();
+                if (Intent.ACTION_SCREEN_OFF.equals(action) || Intent.ACTION_USER_PRESENT.equals(action)) {
+                    handler.removeCallbacks(check);
+                    BluetoothHelper.releaseGatt();
+                    BluetoothHelper.stopPassive();
+                    return;
+                }
+                if (BluetoothAdapter.ACTION_STATE_CHANGED.equals(action)) {
+                    if (intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR) != BluetoothAdapter.STATE_ON) {
+                        handler.removeCallbacks(check);
+                        BluetoothHelper.releaseGatt();
+                        BluetoothHelper.stopPassive();
+                        return;
+                    }
+                    BluetoothHelper.preparePassive(ctx);
+                } else if (!Intent.ACTION_SCREEN_ON.equals(action)) {
+                    BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                    if (device == null) return;
+                    if (BluetoothDevice.ACTION_ACL_DISCONNECTED.equals(action)
+                            || BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(action)) {
+                        BluetoothHelper.invalidatePassive(device.getAddress());
+                    }
+                    boolean connectedModeTarget = false;
+                    for (zixing.bluetooth.unlocker.utils.TrustedDevice trusted : ConfigUtil.getDevices(2)) {
+                        if (zixing.bluetooth.unlocker.utils.TrustedDevice.CONNECTED.equals(trusted.mode)
+                                && trusted.address.equals(device.getAddress())) connectedModeTarget = true;
+                    }
+                    // Our own GATT connection also emits ACL events. Never cancel/restart it here.
+                    if (!connectedModeTarget) return;
+                }
+                if (Intent.ACTION_SCREEN_ON.equals(action)) BluetoothHelper.preparePassive(ctx);
+                handler.removeCallbacks(check);
+                handler.postDelayed(check, 300);
+            }
+        }, filter, ContextCompat.RECEIVER_EXPORTED);
+        BluetoothHelper.preparePassive(context);
     }
 
     private void hookMethod(Executable executable, XposedInterface.Hooker hooker) {
@@ -163,41 +226,12 @@ public class MyXp extends XposedModule {
         final Class<?> MiuiLockPatternUtilClass = ReflectUtil.findClass(
                 "android.security.MiuiLockPatternUtils", classLoader);
 
-        final String[] macrep = new String[1];
         hookMethod(ReflectUtil.findMethod(Application.class, "attach", Context.class), chain -> {
             Object result = chain.proceed();
-            Context context1 = (Context) chain.getArg(0);
-            context = context1;
-            macrep[0] = ConfigUtil.getString("mac", "", 1);
-            if (macrep[0] != null && !macrep[0].isEmpty()) {
-                if (ConfigUtil.BASE_MODE.equals(macrep[0])) {
-                    Object utilclass = ReflectUtil.newInstance(MiuiLockPatternUtilClass, context1);
-                    ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", false);
-                    ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", "");
-                    ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "");
-                    ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "");
-                    macrep[0] = "";
-                } else {
-                    Object utilclass = ReflectUtil.newInstance(MiuiLockPatternUtilClass, context1);
-                    ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", true);
-                    ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", macrep[0]);
-                    ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "mibluetoothunlocker");
-                    ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "mibluetoothunlocker");
-                }
-            }
+            initializeContext((Context) chain.getArg(0), false);
             return result;
         });
-
-        hookMethod(ReflectUtil.findMethod(MiuiLockPatternUtilClass, "getBluetoothAddressToUnlock"), chain -> {
-            Object result = chain.proceed();
-            if (macrep[0] != null && !macrep[0].isEmpty()) {
-                if (ConfigUtil.BASE_MODE.equals(macrep[0])) {
-                    return null;
-                }
-                return macrep[0];
-            }
-            return result;
-        });
+        initializeContext(findCurrentApplication(), false);
 
         myLog("--------------" + MiuiLockPatternUtilClass + "------------");
 
@@ -229,14 +263,14 @@ public class MyXp extends XposedModule {
                 ReflectUtil.callMethod(mLockPatternUtils, "setBluetoothAddressToUnlock",
                         ReflectUtil.callMethod(mDevice, "getAddress").toString());
                 ReflectUtil.callMethod(mLockPatternUtils, "setBluetoothNameToUnlock",
-                        ReflectUtil.callMethod(mDevice, "getName").toString());
+                        Objects.toString(ReflectUtil.callMethod(mDevice, "getName"), "未命名设备"));
                 ReflectUtil.callMethod(chain.getThisObject(), "saveDevice",
                         ReflectUtil.callMethod(chain.getThisObject(), "getContext"),
                         ReflectUtil.callMethod(mDevice, "getAddress").toString(),
                         mDeviceType, mDeviceMajorClass, mDeviceMinorClass, true);
                 ReflectUtil.callMethod(chain.getThisObject(), "switchToSucceedLayout");
                 myLog("--------------结束hook switchToTapConfirmingLayout------------");
-            } catch (Exception ex) {
+            } catch (Exception | LinkageError ex) {
                 myLog("-------------- 发生错误 ： " + ex);
             }
             return null;
@@ -269,13 +303,13 @@ public class MyXp extends XposedModule {
                 mLockPatternUtils = mLockPatternUtilsField.get(chain.getThisObject());
 
                 Class<?> clazzActivity = mUnlockListener.getClass();
-                hookAllMethods(clazzActivity, "onUnlocked", unlockedChain -> {
+                if (listenerClasses.add(clazzActivity)) hookAllMethods(clazzActivity, "onUnlocked", unlockedChain -> {
                     myLog("-------------- before hook com.android.settings.MiuiSecurityBluetoothDeviceInfoFragment$1 ------------");
                     Object[] args = unlockedChain.getArgs().toArray();
                     if (args.length == 1 && "0".equals(String.valueOf(args[0]))) {
                         args[0] = (byte) 1;
                         BluetoothHelper.CanUnlockByBluetoothOldDirect(context,
-                                ReflectUtil.callMethod(mLockPatternUtils, "getBluetoothAddressToUnlock").toString(),
+                                Objects.toString(ReflectUtil.callMethod(mLockPatternUtils, "getBluetoothAddressToUnlock"), ""),
                                 classLoader, 1);
                         myLog("-------------- after hook com.android.settings.MiuiSecurityBluetoothDeviceInfoFragment$1 ------------");
                         return unlockedChain.proceed(args);
@@ -284,7 +318,7 @@ public class MyXp extends XposedModule {
                     myLog("-------------- after hook com.android.settings.MiuiSecurityBluetoothDeviceInfoFragment$1 ------------");
                     return unlockedResult;
                 });
-            } catch (Exception ex) {
+            } catch (Exception | LinkageError ex) {
                 myLog("-------------- onCreate hook error ： " + ex);
             }
             return result;
@@ -296,7 +330,7 @@ public class MyXp extends XposedModule {
         }
         } catch (ReflectUtil.ClassNotFoundError ex) {
             myLog("hookSettings missing class: " + ex);
-        } catch (Exception ex) {
+        } catch (Exception | LinkageError ex) {
             myLog("hookSettings error: " + ex);
         }
     }
@@ -304,8 +338,15 @@ public class MyXp extends XposedModule {
     private void hookSystemUi(ClassLoader classLoader) {
         try {
             myLog("com.android.systemui enter");
-            final String[] macrep = new String[1];
+            MyXp.classLoader = classLoader;
+            hookMethod(ReflectUtil.findMethod(Application.class, "attach", Context.class), chain -> {
+                Object result = chain.proceed();
+                initializeContext((Context) chain.getArg(0), true);
+                return result;
+            });
+            initializeContext(findCurrentApplication(), true);
 
+            try {
             try {
                 final Class<?> MiuiKeyguardUtilsClass = ReflectUtil.findClass(
                         "com.android.keyguard.utils.MiuiKeyguardUtils", classLoader);
@@ -353,7 +394,11 @@ public class MyXp extends XposedModule {
                 });
             }
 
-            final Class<?> BluetoothControllerImplClass = ReflectUtil.findClass(
+            } catch (Exception | LinkageError ex) {
+                myLog("Optional unlock toast hook unavailable: " + ex.getClass().getSimpleName());
+            }
+
+            final Class<?> BluetoothControllerImplClass = ReflectUtil.findClassIfExists(
                     "com.android.systemui.statusbar.policy.BluetoothControllerImpl", classLoader);
             hookAllConstructors(BluetoothControllerImplClass, chain -> {
                 myLog("-------------- before hook BluetoothControllerImplClass ------------");
@@ -367,67 +412,63 @@ public class MyXp extends XposedModule {
                     "com.android.keyguard.MiuiBleUnlockHelper",
                     classLoader
             );
+            hookAllMethods(MiuiBleUnlockHelper, "tryUnlockByBle", chain -> {
+                Object result = chain.proceed();
+                // The native bouncer callback invokes this method when the credential UI opens.
+                if (!deliveringBluetoothResult && isBouncerShowing()) CheckPhoneUnlock();
+                return result;
+            });
             myLog("-------------- hook MiuiBleUnlockHelper ------------");
             hookAllConstructors(MiuiBleUnlockHelper, chain -> {
                 myLog("-------------- before hook MiuiBleUnlockHelper ------------");
                 Object result = chain.proceed();
                 myLog("-------------- after hook MiuiBleUnlockHelper ------------");
                 try {
+                    systemBleHelper = chain.getThisObject();
+                    bouncerVisibleField = ReflectUtil.getFieldContainingName(MiuiBleUnlockHelper, "bouncerVisible");
                     Field mBleListenerField = ReflectUtil.getFieldContainingName(MiuiBleUnlockHelper, "bleListener");
                     mBleListener = mBleListenerField.get(chain.getThisObject());
 
+                    initializeContext(findCurrentApplication(), true);
                     MyXp.classLoader = classLoader;
                     Field mLockPatternUtilsField = ReflectUtil.getFieldContainingName(MiuiBleUnlockHelper, "lockPatternUtils");
                     mLockPatternUtils = mLockPatternUtilsField.get(chain.getThisObject());
 
+                    try {
+                        Object monitorCallback = ReflectUtil.findField(MiuiBleUnlockHelper, "mUpdateMonitorCallback")
+                                .get(chain.getThisObject());
+                        if (monitorCallback != null && listenerClasses.add(monitorCallback.getClass())) {
+                            hookAllMethods(monitorCallback.getClass(), "onKeyguardBouncerStateChanged", bouncerChain -> {
+                                if (bouncerChain.getArgs().size() == 1 && Boolean.FALSE.equals(bouncerChain.getArg(0))) {
+                                    BluetoothHelper.releaseGatt();
+                                }
+                                return bouncerChain.proceed();
+                            });
+                        }
+                    } catch (Exception | LinkageError ex) {
+                        myLog("Optional bouncer lifecycle hook unavailable: " + ex.getClass().getSimpleName());
+                    }
+
                     Class<?> clazzActivity = mBleListener.getClass();
-                    hookAllMethods(clazzActivity, "onUnlocked", unlockedChain -> {
+                    if (listenerClasses.add(clazzActivity)) hookAllMethods(clazzActivity, "onUnlocked", unlockedChain -> {
                         myLog("-------------- before hook mBleListener.onUnlocked ------------");
                         if (unlockedChain.getArgs().size() == 1
                                 && "0".equals(String.valueOf(unlockedChain.getArg(0)))) {
-                            CheckPhoneUnlock();
+                            CheckPhoneUnlock(true);
                         }
                         Object unlockedResult = unlockedChain.proceed();
                         myLog("-------------- after hook mBleListener.onUnlocked ------------");
                         return unlockedResult;
                     });
-                } catch (Exception ex) {
+                } catch (Exception | LinkageError ex) {
                     myLog("-------------- MiuiBleUnlockHelper hook error ： " + ex);
                 }
                 return result;
             });
 
-            final Class<?> MiuiLockPatternUtilClass = ReflectUtil.findClass(
-                    "android.security.MiuiLockPatternUtils", classLoader);
-            hookMethod(ReflectUtil.findMethod(Application.class, "attach", Context.class), chain -> {
-                Object result = chain.proceed();
-                try {
-                    Context context1 = (Context) chain.getArg(0);
-                    context = context1;
-                    macrep[0] = ConfigUtil.getString("mac", "", 2);
-                    if (macrep[0] != null && !macrep[0].isEmpty()) {
-                        if (ConfigUtil.BASE_MODE.equals(macrep[0])) {
-                            Object utilclass = ReflectUtil.newInstance(MiuiLockPatternUtilClass, context1);
-                            ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", false);
-                            ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", "");
-                            ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "");
-                            ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "");
-                        } else {
-                            Object utilclass = ReflectUtil.newInstance(MiuiLockPatternUtilClass, context1);
-                            ReflectUtil.callMethod(utilclass, "setBluetoothUnlockEnabled", true);
-                            ReflectUtil.callMethod(utilclass, "setBluetoothAddressToUnlock", macrep[0]);
-                            ReflectUtil.callMethod(utilclass, "setBluetoothNameToUnlock", "mibluetoothunlocker");
-                            ReflectUtil.callMethod(utilclass, "setBluetoothKeyToUnlock", "mibluetoothunlocker");
-                        }
-                    }
-                } catch (Exception ex) {
-                    myLog(ex.toString());
-                }
-                return result;
-            });
         } catch (ReflectUtil.ClassNotFoundError ex) {
             myLog(ex.toString());
-        } catch (Exception ex) {
+        } catch (Exception | LinkageError ex) {
             myLog(ex.toString());
         }
         myLog("com.android.systemui leave");
@@ -436,19 +477,19 @@ public class MyXp extends XposedModule {
     public static Class<?> systemuiR = null;
     static int miui_keyguard_ble_unlock_succeed_msg;
 
-    public static void CheckPhoneUnlock() {
-        Runnable mt = () -> {
-            if (context != null && mLockPatternUtils != null && classLoader != null) {
-                BluetoothHelper.CanUnlockByBluetoothOldDirect(context,
-                        ReflectUtil.callMethod(mLockPatternUtils, "getBluetoothAddressToUnlock").toString(),
-                        classLoader, 2);
-            } else {
-                myLog("---------------NULL context--------------" + context + mLockPatternUtils + classLoader);
-            }
-        };
-        Thread mt1 = new Thread(mt, "unlockthread");
-        mt1.start();
-        myLog("--------------mt1 unlockthread ------------");
+    public static void CheckPhoneUnlock() { CheckPhoneUnlock(false); }
+
+    private static void CheckPhoneUnlock(boolean nativeEvent) {
+        // Basic mode follows the native feature's own enabled state/callbacks.
+        if (!nativeEvent && ConfigUtil.getDevices(2).isEmpty()) return;
+        if (context == null || mBleListener == null || classLoader == null || !isBouncerShowing()) return;
+        try {
+            String legacy = mLockPatternUtils == null ? "" : Objects.toString(
+                    ReflectUtil.callMethod(mLockPatternUtils, "getBluetoothAddressToUnlock"), "");
+            BluetoothHelper.CanUnlockByBluetoothOldDirect(context, legacy, classLoader, 2);
+        } catch (Exception | LinkageError ex) {
+            myLog("Unlock check unavailable: " + ex.getClass().getSimpleName());
+        }
     }
 
     static ClassLoader classLoader = null;
@@ -456,25 +497,39 @@ public class MyXp extends XposedModule {
     static Context context = null;
     static Object mUnlockListener = null;
     public static Object mBleListener = null;
+    private static Object systemBleHelper;
+    private static Field bouncerVisibleField;
+    private static boolean deliveringBluetoothResult;
+
+    private static boolean isBouncerShowing() {
+        try {
+            return systemBleHelper != null && bouncerVisibleField != null
+                    && bouncerVisibleField.getBoolean(systemBleHelper);
+        } catch (IllegalAccessException | IllegalArgumentException ex) { return false; }
+    }
 
     public static void UnlockPhone() {
-        try {
-            if (mBleListener != null && context != null) {
-                new Handler(context.getMainLooper()).post(() ->
-                        ReflectUtil.callMethod(mBleListener, "onUnlocked", (byte) 2));
-            } else {
-                myLog("---------------NULL unlockMethod--------------");
-            }
-        } catch (Exception e) {
-            myLog(e.toString());
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            new Handler(Looper.getMainLooper()).post(MyXp::UnlockPhone);
+            return;
         }
+        try {
+            if (mBleListener != null && context != null && isBouncerShowing()
+                    && BluetoothHelper.canCheckLockscreen(context)) {
+                deliveringBluetoothResult = true;
+                try { ReflectUtil.callMethod(mBleListener, "onUnlocked", (byte) 2); }
+                finally { deliveringBluetoothResult = false; }
+            }
+        } catch (Exception | LinkageError ex) { myLog("Unlock callback unavailable: " + ex); }
     }
 
     public static void SetBluetoothStatus(byte b) {
         try {
             if (mUnlockListener != null && context != null) {
-                new Handler(context.getMainLooper()).post(() ->
-                        ReflectUtil.callMethod(mUnlockListener, "onUnlocked", b));
+                new Handler(context.getMainLooper()).post(() -> {
+                    try { ReflectUtil.callMethod(mUnlockListener, "onUnlocked", b); }
+                    catch (Exception | LinkageError ex) { myLog("Settings callback unavailable: " + ex); }
+                });
             } else {
                 myLog("---------------NULL unlockMethod--------------");
             }

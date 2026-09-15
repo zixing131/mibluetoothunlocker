@@ -51,30 +51,34 @@ public class DerviceAdapter extends BaseRecyclerViewAdapter<DeviceBean> {
         MyViewHolder holder = (MyViewHolder) viewHolder;
         DeviceBean data = list.get(position);
         if (data == null) return;
-        // 5.1.1：设备名可能为 null（部分已配对/未命名蓝牙设备），
-        // 直接调用 getName().isEmpty() 会触发 NPE 闪退，这里先判空再展示为 Unknown
         String name = data.getName();
-        holder.txtAddress.setText((name == null || name.isEmpty()) ? "Unknown" : name);
+        holder.txtAddress.setText((name == null || name.isEmpty()) ? "未命名设备" : name);
 
-        // 5.1.1：MAC 地址同样可能为空，空值统一显示为 Unknown，避免选择页崩溃
         String addr = data.getAddress();
-        holder.txtMac.setText((addr == null || addr.isEmpty()) ? "Unknown" : addr);
-        // 已还原 5.1.2 的 rssi 阈值判断（原实现未生效），恢复为 rssi < 1
-        if(data.getRssi()<1)
+        holder.txtMac.setText((addr == null || addr.isEmpty()) ? "地址未知" : addr);
+        if(data.hasRssi())
         {
-            holder.txtRssi.setText(data.getRssi()+"dB");
+            holder.txtRssi.setText(data.getRssi()+" dBm");
             holder.txtTime.setText(String.format("%.2f", data.getDistance())+"m");
         }
         else{
-            holder.txtRssi.setText("Unknown");
-            holder.txtTime.setText("Unknown");
+            holder.txtRssi.setText("信号未知");
+            holder.txtTime.setText("距离未知");
         }
         holder.imageSignal.setImageResource(getRssiIcon(data.getRssi()));
-        holder.txtDesc.setVisibility(data.isStatus()?View.VISIBLE:View.GONE);
+        String state = data.getBondState() == 11 ? "配对中" : (data.isStatus() ? "已配对" : "未配对");
+        for (zixing.bluetooth.unlocker.utils.TrustedDevice device : zixing.bluetooth.unlocker.utils.ConfigUtil.getDevices(0)) {
+            if (device.address.equals(addr)) {
+                state += zixing.bluetooth.unlocker.utils.TrustedDevice.CONNECTED.equals(device.mode) ? " · 连接解锁" : " · 距离解锁";
+            }
+        }
+        holder.txtDesc.setText(state);
+        holder.txtDesc.setVisibility(View.VISIBLE);
         animate(viewHolder, position);
     }
 
     public static int getRssiIcon(int rssi){
+        if (!zixing.bluetooth.unlocker.utils.TrustedDevice.validRssi(rssi)) return R.mipmap.ic_rssi1;
         if (rssi >= -50){
             return R.mipmap.ic_rssi5;
         }else if (rssi >= -62){

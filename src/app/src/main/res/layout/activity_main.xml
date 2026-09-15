@@ -1,94 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout  android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clickable="false"
-    android:orientation="vertical"
-    android:layout_gravity="center">
-
-    <include
-        android:id="@+id/include"
-        layout="@layout/include_toolbar" />
-
-    <include
-        android:layout_marginTop="15dp"
-        android:layout_marginLeft="15dp"
-        android:layout_marginRight="15dp"
-        android:layout_marginBottom="20dp"
-        android:id="@+id/itemdevicemain"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        layout="@layout/item_dervice"/>
-
-    <LinearLayout
-        android:orientation="vertical"
-        android:layout_marginTop="10pt"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-
-
-        <com.google.android.material.textfield.TextInputLayout
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:id="@+id/input_coins_num"
-            android:hint="信号阈值">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:textSize="17sp"
-                android:textColor="@color/black"
-                android:id="@+id/editText"
-                android:maxLines="1"
-                android:singleLine="true"
-                android:text="-50"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
-
-        </com.google.android.material.textfield.TextInputLayout>
-
-
-        <Button
-            android:textColor="@color/white"
-            android:layout_marginTop="5pt"
-            android:id="@+id/btnSave"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="保存"
-            >
-
-        </Button>
-
-        <Switch
-            android:layout_marginTop="5pt"
-            android:id="@+id/switchtips"
-            android:text="解锁提示"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"></Switch>
-
-
-    </LinearLayout>
-
-
-</LinearLayout>
-
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <include android:id="@+id/include" layout="@layout/include_toolbar" />
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent"
+        android:layout_below="@id/include" android:fillViewport="true" android:clipToPadding="false">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:paddingTop="24dp" android:paddingBottom="100dp">
+            <include android:id="@+id/itemdevicemain" layout="@layout/item_dervice"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" />
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginHorizontal="20dp" android:layout_marginTop="24dp"
+                app:cardCornerRadius="20dp" app:cardElevation="0dp" app:cardBackgroundColor="@color/white">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="vertical" android:padding="24dp" android:gravity="center_horizontal">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="解锁设置" android:textSize="18sp" android:textStyle="bold" android:textColor="@color/colorPrimaryText" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/input_coins_num"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp" android:hint="解锁阈值"
+                        app:suffixText="dBm" app:boxCornerRadiusTopStart="12dp" app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp" app:boxCornerRadiusBottomEnd="12dp"
+                        app:helperText="数值越接近 0，需要的信号越强">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/editText" android:layout_width="match_parent" android:layout_height="wrap_content"
+                            android:inputType="numberSigned" android:textSize="20sp" android:textColor="@color/colorPrimaryText"
+                            android:maxLines="1" android:singleLine="true" android:text="-50" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSave" android:layout_width="match_parent" android:layout_height="56dp"
+                        android:layout_marginTop="20dp" android:text="保存阈值" android:textSize="16sp"
+                        android:textColor="@color/white" app:cornerRadius="14dp" />
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchtips" android:layout_width="match_parent" android:layout_height="56dp"
+                        android:layout_marginTop="12dp" android:text="显示解锁提示" android:textSize="15sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </ScrollView>
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabmain"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="25dp"
-        android:layout_marginBottom="25dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true"
-        app:fabSize="normal"
-        app:fab_colorNormal="@color/purple_500"
-        app:fab_colorPressed="@color/purple_500"
-        app:srcCompat="@mipmap/ic_refersh" />
-
+        android:id="@+id/fabmain" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginEnd="24dp" android:layout_marginBottom="24dp"
+        android:layout_alignParentEnd="true" android:layout_alignParentBottom="true"
+        android:contentDescription="刷新已配置设备信号" app:srcCompat="@mipmap/ic_refersh" />
 </RelativeLayout>

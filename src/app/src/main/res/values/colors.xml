@@ -17,4 +17,6 @@
     <color name="colorBackground">#eaeaea</color>
     <color name="colorHint">#999999</color>
     <color name="colorBackgroundAccent">#ffffff</color>
+    <color name="dialog_outline">#E3DDED</color>
+    <color name="dialog_selected">#F1E9FF</color>
 </resources>
